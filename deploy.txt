@@ -1,0 +1,64 @@
+====================================================
+  Fisherman's Spring - Self-Hosted Server Build (v22)
+====================================================
+
+WHAT THIS IS
+A web replica of the casual fishing game, with a real backend
+leaderboard. Fully localized in English (no Chinese text).
+
+FEATURES
+ 1. 5 Grounds x 80 fish (Riverside 18 / City Lake 16 / Mountain
+    Stream 13 / Sunny Beach 15 / Ice Lake 14, plus 4 shop-exclusive
+    and 4 migratory fish)
+ 2. Shop with 4 tabs: Rods / Baits / Gems / Spirit Shop
+    - Rods: 5 tiers + durability repair (Coins repair: cap -20%;
+      Ad repair: free & lossless, 3x daily)
+    - Gems: Stamina Potions, Mighty/Durable prefix rods, Relic
+      Stones, exclusive fish
+    - Spirit Shop: Rations, daily relic & spirit deals
+ 3. Stamina system (max 100, -8 per cast, auto regen)
+ 4. Relic Stones (Swift/Gale/Waterwood/Finisher/Strike/Speed,
+    stack up to 3)
+ 5. Real server leaderboard: Fishing Rank + Best Spirit Fish,
+    TOP100, daily rank settlement pays Gems
+ 6. Aquarium: Freshwater/Saltwater/Migratory/Exclusive codex,
+    offline earnings
+ 7. Release rare fish for Spirit, dual-currency economy
+ 8. Ads for currency: Gems (3x daily, +3 each) & Spirit (2x daily,
+    +2 each) via Adsgram interstitial
+ 9. Telegram binding: bind via your Telegram Bot on the leaderboard
+    (auto avatar / nickname / @account), or fill manually
+10. Trophies: 8 achievements with one-time rewards
+11. New-player tutorial (3 steps, shown once)
+12. XP bar in the top bar; level-up ranks (15 tiers)
+13. Rarity-based fish fight system (Legendary fish struggle much
+    harder), red vignette warning near line-break tension
+14. Realistic 3-beat cast animation; 3D-style scene backgrounds
+
+DEPLOY
+ 1. Put "index.html" and "server.py" in the SAME folder
+ 2. Run on the computer:  python3 server.py
+ 3. Open in a browser:    http://<your-IP>:8787
+    (same-WiFi phones work too; find LAN IP via ipconfig/ifconfig)
+ 4. Saves auto-persist to save.json in the same folder (per player)
+
+ADSGRAM AD CONFIG (IMPORTANT)
+- The game loads the real Adsgram SDK and only rewards AFTER the
+  ad plays to completion (onReward/onComplete callback).
+- AD_BLOCK_ID is a placeholder ('') in index.html.
+  Before ads can work:
+  1. Create an interstitial ad unit in your Adsgram dashboard
+     (blockId format: int-xxx)
+  2. Put your game inside a Telegram Mini App / Bot (Adsgram only
+     works inside Telegram)
+  3. Replace '' in the AD_BLOCK_ID constant with your int-xxx,
+     then restart the server. Ads will not display in a plain
+     browser - that is expected behavior.
+
+NOTES
+- Leaderboard is server-backed: rank = score (rare fish score more),
+  daily settlement at 00:00; built-in NPCs seed the board, real
+  scores take over.
+- Free ad repair resets daily (24h window).
+- Default port 8787. To change:  PORT=9000 python3 server.py
+- Requires Python 3 (stdlib only, zero dependencies).

@@ -1,0 +1,3233 @@
+<!DOCTYPE html>
+<html lang="en-US">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Fisherman's Spring</title>
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='14' fill='%23166a7a'/%3E%3Cpath d='M8 36 C16 26 26 22 38 24 L40 12 L46 26 L34 30 C30 32 24 40 12 44 Z' fill='%23e0a93b'/%3E%3Ccircle cx='18' cy='30' r='2' fill='%23166a7a'/%3E%3C/svg%3E">
+<style>
+:root{
+ --ink:#26333B; --ink-soft:#5A6A73;
+ --paper:#FBF4E2; --paper-deep:#F1E6CB; --wood:#EAD9B0; --wood-line:#D8C191;
+ --water-d:#16697A; --water-m:#2A93A6; --water-l:#8ED0D8;
+ --bamboo:#47693E; --cinnabar:#C94B32; --cinnabar-d:#A83B27;
+ --gold:#E0A93B; --gold-d:#C08F26;
+ --r-c:#9AA5A6; --r-u:#5E9C50; --r-r:#4A7FC4; --r-ep:#8E5FC4; --r-l:#E0A93B;
+ --shadow:0 10px 24px rgba(22,50,60,.16);
+ --serif:"Georgia","Times New Roman",serif;
+ --sans:-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,system-ui,sans-serif;
+}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html,body{height:100%}
+body{
+ font-family:var(--sans);color:var(--ink);background:#0F2E36;
+ overflow:hidden;touch-action:manipulation;
+ -webkit-user-select:none;user-select:none;
+}
+button{font-family:inherit;border:none;background:none;cursor:pointer;color:inherit}
+button:focus-visible{outline:2px solid var(--gold);outline-offset:2px}
+img{display:block}
+
+#app{
+ position:relative;width:100%;height:100vh;height:100dvh;max-width:460px;
+ margin:0 auto;overflow:hidden;background:var(--water-m);
+}
+@media (min-width:768px){
+ body{background:
+ radial-gradient(1200px 600px at 20% -10%, rgba(230,180,120,.18), transparent 60%),
+ radial-gradient(1000px 700px at 85% 110%, rgba(80,160,170,.25), transparent 60%),
+ #0F2E36;}
+}
+
+#stage{position:absolute;top:0;left:0;right:0;bottom:0}
+#stage canvas{position:absolute;top:0;left:0;right:0;bottom:0;width:100%;height:100%;display:block}
+
+/* top bar */
+#topbar{
+ position:absolute;top:0;left:0;right:0;z-index:20;
+ display:flex;align-items:center;gap:8px;padding:10px 12px;
+ pointer-events:none;
+}
+.chip{
+ pointer-events:auto;display:flex;align-items:center;gap:6px;
+ background:rgba(251,244,226,.92);border:1px solid var(--wood-line);
+ border-radius:999px;padding:6px 12px;font-size:13px;font-weight:500;
+ box-shadow:var(--shadow);white-space:nowrap;
+}
+.chip .ico{width:16px;height:16px;flex:none}
+.chip b{font-weight:700}
+.chip.rank{background:rgba(227,236,229,.94)}
+.chip.coin{color:#7A5B0F}
+.chip.coin b{color:var(--gold-d)}
+#btnSound{
+ pointer-events:auto;margin-left:auto;width:38px;height:38px;border-radius:50%;
+ background:rgba(251,244,226,.92);border:1px solid var(--wood-line);
+ display:flex;align-items:center;justify-content:center;box-shadow:var(--shadow);
+}
+#btnSound svg{width:19px;height:19px}
+
+#hud{
+ position:absolute;left:12px;right:12px;bottom:78px;z-index:20;
+ display:flex;flex-direction:column;gap:8px;
+}
+.barRow{display:flex;gap:10px;align-items:stretch}
+.barBox{
+ flex:1;background:rgba(251,244,226,.9);border:1px solid var(--wood-line);
+ border-radius:12px;padding:6px 10px;box-shadow:var(--shadow);min-width:0;
+}
+.barLabel{display:flex;justify-content:space-between;font-size:11px;color:var(--ink-soft);margin-bottom:4px;font-variant-numeric:tabular-nums}
+.barTrack{height:8px;border-radius:5px;background:rgba(38,51,59,.12);overflow:hidden}
+.barFill{height:100%;width:0%;border-radius:5px;transition:width .08s linear}
+.barFill.tension{background:linear-gradient(90deg,#E8A23B,#D9482E)}
+.barFill.dist{background:linear-gradient(90deg,#5FA8C0,#2A93A6)}
+.barFill.stamina{background:linear-gradient(90deg,#8FBF6A,#4E8C4A)}
+.barFill.warn{animation:pulse .5s infinite}
+@keyframes pulse{50%{filter:brightness(1.35)}}
+
+#actionWrap{display:flex;gap:10px;align-items:center}
+#btnAction{
+ flex:1;height:62px;border-radius:18px;font-size:19px;font-weight:700;
+ color:#FFF8E6;background:linear-gradient(180deg,#E0604A,var(--cinnabar) 55%,var(--cinnabar-d));
+ box-shadow:0 6px 0 #8F2F1E,inset 0 1px 0 rgba(255,255,255,.35),var(--shadow);letter-spacing:2px;
+ transition:transform .05s;
+}
+#btnAction:active{transform:translateY(3px);box-shadow:0 3px 0 #8F2F1E}
+#btnAction.holdState{background:linear-gradient(180deg,#3E8C6A,#2E6E52);box-shadow:0 6px 0 #21523C}
+#btnAction.flash{animation:flash 1s infinite}
+@keyframes flash{50%{background:linear-gradient(180deg,#E8A23B,#C0801F)}}
+#btnAction:disabled{opacity:.55;transform:none}
+#btnBait{
+ width:64px;height:62px;border-radius:18px;flex:none;
+ background:rgba(251,244,226,.92);border:1px solid var(--wood-line);
+ box-shadow:var(--shadow);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;
+ font-size:11px;color:var(--ink-soft);
+}
+#btnBait .bIco{width:26px;height:26px;display:flex;color:var(--cinnabar)}
+#btnBait .bIco svg{width:100%;height:100%}
+
+/* bottom nav */
+#nav{
+ position:absolute;left:0;right:0;bottom:0;z-index:25;height:66px;
+ background:linear-gradient(180deg,rgba(251,244,226,.96),rgba(241,230,203,.96));
+ border-top:1px solid rgba(200,161,71,.45);
+ box-shadow:0 -6px 18px rgba(22,50,60,.08);
+ display:flex;
+}
+.navItem{
+ flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;
+ font-size:11px;color:var(--ink-soft);position:relative;
+}
+.navItem svg{width:22px;height:22px}
+.navItem.on{color:var(--cinnabar)}
+.navItem .dot{
+ position:absolute;top:7px;right:calc(50% - 20px);width:8px;height:8px;border-radius:50%;
+ background:var(--gold);display:none;box-shadow:0 0 6px rgba(224,169,59,.7);
+}
+.xpWrap{
+ position:relative;display:block;width:58px;height:4px;border-radius:2px;
+ background:rgba(255,255,255,.28);overflow:hidden;margin:2px auto 0;
+}
+.xpWrap i{
+ position:absolute;left:0;top:0;bottom:0;width:0%;border-radius:2px;
+ background:linear-gradient(90deg,#E0A93B,#FFD97A);transition:width .35s ease;
+}
+#tutorialOverlay{
+ position:fixed;inset:0;z-index:80;display:none;align-items:center;justify-content:center;
+ background:rgba(10,26,30,.66);backdrop-filter:blur(3px);
+}
+#tutorialOverlay.show{display:flex}
+.tutorialCard{
+ width:min(86vw,340px);border-radius:18px;padding:26px 22px 20px;text-align:center;
+ background:linear-gradient(165deg,#FFFDF4,#F7EFD9);box-shadow:0 18px 48px rgba(0,0,0,.35);
+ border:1px solid #EFE3C4;animation:tutoIn .4s ease;
+}
+@keyframes tutoIn{from{transform:translateY(22px) scale(.96);opacity:0}to{transform:none;opacity:1}}
+.tutorialIcon{
+ width:56px;height:56px;margin:0 auto 12px;border-radius:50%;display:flex;align-items:center;justify-content:center;
+ background:linear-gradient(145deg,#E8F2F4,#C9E2E8);color:#2F7B8C;font-size:26px;
+}
+.tutorialIcon svg{width:28px;height:28px}
+.tutorialTitle{font-family:var(--serif);font-weight:900;font-size:20px;color:#1F3B44;letter-spacing:.5px}
+.tutorialText{margin:8px 0 14px;font-size:14.5px;line-height:1.6;color:#51666E}
+.tutorialDots{display:flex;gap:6px;justify-content:center;margin-bottom:16px}
+.tutorialDots i{width:7px;height:7px;border-radius:50%;background:#D8CDB4}
+.tutorialDots i.on{background:var(--cinnabar);width:18px;border-radius:4px;transition:all .25s}
+.navItem .dot.show{display:block}
+.navItem svg{transition:transform .15s}
+.navItem.on svg{transform:translateY(-1px) scale(1.12);filter:drop-shadow(0 2px 3px rgba(201,75,50,.3))}
+.navItem.on::before{
+ content:"";position:absolute;top:-1px;left:50%;width:34px;height:3px;transform:translateX(-50%);
+ border-radius:0 0 4px 4px;background:linear-gradient(90deg,#E8A23B,#D9482E);
+}
+
+/* panels (aquarium / shop / grounds) */
+.panel{
+ position:absolute;top:0;left:0;right:0;bottom:0;z-index:30;
+ background:
+ radial-gradient(circle at 15% 0%,rgba(224,169,59,.06),transparent 42%),
+ radial-gradient(circle at 88% 96%,rgba(74,105,62,.05),transparent 46%),
+ repeating-linear-gradient(0deg,rgba(120,90,30,.012) 0 1px,transparent 1px 4px),
+ var(--paper);
+ display:flex;flex-direction:column;transform:translateY(100%);
+ transition:transform .28s cubic-bezier(.22,1,.36,1);
+}
+.panel.open{transform:translateY(0)}
+.panelHead{
+ display:flex;align-items:center;gap:10px;padding:14px 14px 10px;
+ border-bottom:1px solid var(--wood-line);background:var(--paper-deep);
+}
+.panelTitle{font-family:var(--serif);font-weight:900;font-size:20px;letter-spacing:1px}
+.btnBack{
+ width:38px;height:38px;border-radius:12px;background:var(--paper);
+ border:1px solid var(--wood-line);display:flex;align-items:center;justify-content:center;flex:none;
+}
+.btnBack svg{width:18px;height:18px}
+.panelBody{flex:1;overflow-y:auto;padding:12px 14px 20px;overscroll-behavior:contain}
+
+/* ground select */
+.groundCard{
+ display:flex;gap:12px;align-items:center;background:var(--paper-deep);
+ border:1px solid var(--wood-line);border-radius:16px;padding:12px;
+ margin-bottom:10px;box-shadow:var(--shadow);
+}
+.groundThumb{
+ width:64px;height:64px;border-radius:12px;flex:none;overflow:hidden;position:relative;
+ background:linear-gradient(180deg,#BFE3EA 0 55%,#2A93A6 55%);
+}
+.groundThumb canvas{position:absolute;top:0;left:0;right:0;bottom:0;width:100%;height:100%}
+.groundInfo{flex:1;min-width:0}
+.groundName{font-family:var(--serif);font-weight:700;font-size:16px}
+.groundMeta{font-size:12px;color:var(--ink-soft);margin-top:3px;font-variant-numeric:tabular-nums}
+.groundBtns{display:flex;gap:6px;margin-top:8px}
+.btnSm{
+ padding:7px 12px;border-radius:10px;font-size:13px;font-weight:700;color:#FFF8E6;
+ background:var(--cinnabar);box-shadow:0 3px 0 #8F2F1E;
+}
+.btnSm:active{transform:translateY(2px);box-shadow:0 1px 0 #8F2F1E}
+.btnSm.alt{background:#4E8C4A;box-shadow:0 3px 0 #35632F}
+.btnSm:disabled{opacity:.5;box-shadow:none;transform:none}
+.groundCard.locked{opacity:.75}
+.groundCard.locked .btnSm{background:#9AA5A6;box-shadow:0 3px 0 #6E7879}
+.groundBadge{font-size:11px;color:#8F2F1E;background:#F7DFD4;border-radius:999px;padding:3px 8px;font-weight:700}
+
+/* codex */
+.statStrip{
+ display:flex;gap:8px;margin-bottom:10px;
+}
+.statBox{
+ flex:1;background:var(--paper-deep);border:1px solid var(--wood-line);
+ border-radius:12px;padding:8px 10px;text-align:center;
+}
+.statBox .num{font-size:18px;font-weight:700;font-variant-numeric:tabular-nums;color:var(--cinnabar)}
+.statBox .lbl{font-size:11px;color:var(--ink-soft);margin-top:2px}
+.tabRow{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;scrollbar-width:none}
+.tabRow::-webkit-scrollbar{display:none}
+.tabChip{
+ flex:none;padding:7px 14px;border-radius:999px;font-size:13px;font-weight:500;
+ background:var(--paper-deep);border:1px solid var(--wood-line);color:var(--ink-soft);
+}
+.tabChip.on{background:var(--bamboo);color:#F3F7E8;border-color:var(--bamboo)}
+.fishGrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
+.fishCard{
+ background:var(--paper-deep);border:1px solid var(--wood-line);border-radius:14px;
+ padding:10px 8px 8px;text-align:center;
+}
+.fishCard .fImg{width:100%;height:46px;object-fit:contain}
+.fishCard .fName{font-size:13px;font-weight:700;margin-top:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.fishCard .fW{font-size:11px;color:var(--ink-soft);font-variant-numeric:tabular-nums;margin-top:2px}
+.fishCard .fDot{width:7px;height:7px;border-radius:50%;display:inline-block;margin-right:4px}
+.fishCard.locked{opacity:.85;filter:saturate(.2)}
+.fishCard.locked .fImg{filter:brightness(0);opacity:.35}
+.fishCard.locked .fName{color:var(--ink-soft)}
+.fishCard.locked .fW{color:#B9B2A0}
+
+/* shop */
+.shopTabs{display:flex;margin-bottom:12px;background:var(--paper-deep);border-radius:14px;padding:4px;border:1px solid var(--wood-line)}
+.shopTab{flex:1;padding:9px 0;border-radius:11px;font-size:14px;font-weight:700;color:var(--ink-soft);text-align:center}
+.shopTab.on{background:var(--paper);color:var(--cinnabar);box-shadow:var(--shadow)}
+.shopCard{
+ display:flex;gap:12px;align-items:center;background:var(--paper-deep);
+ border:1px solid var(--wood-line);border-radius:16px;padding:12px;margin-bottom:10px;box-shadow:var(--shadow);
+}
+.shopCard .sImg{width:52px;height:52px;flex:none;border-radius:12px;background:rgba(255,255,255,.6);display:flex;align-items:center;justify-content:center}
+.shopCard.qGold{border-color:rgba(217,178,74,.75);box-shadow:0 0 0 1px rgba(217,178,74,.22),0 4px 10px rgba(217,178,74,.16)}
+.shopCard.qBlue{border-color:rgba(95,168,192,.75);box-shadow:0 0 0 1px rgba(95,168,192,.22),0 4px 10px rgba(95,168,192,.16)}
+.shopCard.qEpic{border-color:rgba(200,120,90,.8);box-shadow:0 0 0 1px rgba(200,120,90,.25),0 4px 10px rgba(200,120,90,.18)}
+.adBanner{display:flex;align-items:center;gap:10px;background:linear-gradient(135deg,rgba(217,178,74,.16),rgba(224,169,59,.06));border:1px solid rgba(217,178,74,.45);border-radius:14px;padding:10px 12px;margin-bottom:12px}
+.adBanner.blue{background:linear-gradient(135deg,rgba(95,168,192,.16),rgba(95,168,192,.06));border-color:rgba(95,168,192,.45)}
+.adBannerT{font-size:14px;font-weight:800}
+.adBannerD{font-size:11px;color:var(--ink-soft);margin-top:2px}
+.adBanner button{margin-left:auto;padding:8px 14px;border-radius:10px;font-size:13px;font-weight:700;color:#FFF8E6;background:linear-gradient(180deg,#D9B24A,#C9A24B);box-shadow:0 3px 0 #8F6B1F;flex:none}
+.adBanner button:active{transform:translateY(2px);box-shadow:0 1px 0 #8F6B1F}
+.adBanner.blue button{background:linear-gradient(180deg,#5FA8C0,#3E7E96);box-shadow:0 3px 0 #2A5A6E}
+.adCard{background:linear-gradient(160deg,#2E3B4E,#1C2430);color:#F2EFE9;border-radius:18px;padding:26px 22px;text-align:center;max-width:320px;width:90%}
+.adLogo{width:64px;height:64px;border-radius:16px;background:linear-gradient(135deg,#E8806A,#C94B32);margin:0 auto 14px;display:flex;align-items:center;justify-content:center}
+.adTitle{font-size:17px;font-weight:800}
+.adSub{font-size:12px;opacity:.75;margin-top:6px}
+.adBar{height:9px;border-radius:5px;background:rgba(255,255,255,.16);margin:18px 0 8px;overflow:hidden}
+.adFill{height:100%;width:0%;background:linear-gradient(90deg,#E8C96A,#E8806A);border-radius:5px;transition:width .1s linear}
+.adCount{font-size:13px;opacity:.85;font-variant-numeric:tabular-nums}
+.btnAdSkip{margin-top:14px;padding:8px 22px;border-radius:10px;background:rgba(255,255,255,.14);color:#F2EFE9;font-size:13px;font-weight:700}
+.tgTip{font-size:12px;color:var(--ink-soft);line-height:1.5;margin:8px 0 4px}
+.tgRow{margin:8px 0}
+.inp{width:100%;box-sizing:border-box;padding:10px 12px;border-radius:10px;border:1px solid var(--wood-line);background:#FFF;font-size:14px;color:#3A3226}
+.tgDiv{display:flex;align-items:center;gap:8px;margin:14px 0 2px;font-size:11px;color:var(--ink-soft)}
+.tgDiv::before,.tgDiv::after{content:'';flex:1;height:1px;background:var(--wood-line)}
+.rankUser{flex:1;min-width:0;display:flex;align-items:center;gap:8px}
+.rankAvatar{width:34px;height:34px;border-radius:50%;flex:none;background:linear-gradient(135deg,#8FA8B8,#5E7A8E);color:#FFF;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;background-size:cover;background-position:center;overflow:hidden}
+.rankInfo{min-width:0;flex:1}
+.rankAcc{font-size:11px;color:var(--ink-soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.shopCard .sImg img,.shopCard .sImg canvas{border-radius:8px}
+.shopCard .sImg svg{width:34px;height:34px}
+.shopInfo{flex:1;min-width:0}
+.shopName{font-weight:700;font-size:15px}
+.shopDesc{font-size:12px;color:var(--ink-soft);margin-top:3px;line-height:1.45}
+.shopPrice{display:flex;align-items:center;gap:5px;color:#7A5B0F;font-weight:700;font-size:14px;margin-top:5px;font-variant-numeric:tabular-nums}
+.shopPrice svg{width:15px;height:15px}
+.btnBuy{
+ padding:9px 14px;border-radius:12px;font-size:14px;font-weight:700;color:#FFF8E6;
+ background:linear-gradient(180deg,var(--gold),var(--gold-d));box-shadow:0 3px 0 #9E7520;flex:none;
+}
+.btnBuy:active{transform:translateY(2px);box-shadow:0 1px 0 #9E7520}
+.btnBuy:disabled{background:#9AA5A6;box-shadow:none;color:#E7E4DC}
+.btnBuy.equipped{background:var(--bamboo);box-shadow:0 3px 0 #2F4D29}
+
+/* weigh result card */
+.overlay{
+ position:absolute;top:0;left:0;right:0;bottom:0;z-index:60;background:rgba(15,46,54,.55);
+ display:none;align-items:center;justify-content:center;padding:20px;
+}
+.overlay.show{display:flex}
+.card{
+ width:100%;max-width:360px;background:var(--paper);border-radius:22px;
+ box-shadow:0 20px 60px rgba(0,0,0,.35);overflow:hidden;text-align:center;
+ animation:pop .3s cubic-bezier(.22,1,.36,1);
+}
+@keyframes pop{from{transform:scale(.85);opacity:0}}
+.cardBody{padding:20px 18px 18px}
+.cardTitle{font-family:var(--serif);font-weight:900;font-size:20px;letter-spacing:2px}
+.weighImg{width:130px;height:90px;margin:10px auto 4px}
+.rarityTag{display:inline-block;padding:3px 12px;border-radius:999px;font-size:12px;font-weight:700;color:#fff;margin-bottom:8px}
+.fishLine{font-size:16px;font-weight:700;margin-top:4px}
+.fishLine .w{font-size:24px;font-weight:900;font-variant-numeric:tabular-nums;color:var(--cinnabar)}
+.rewardRow{display:flex;justify-content:center;gap:22px;margin:14px 0 4px}
+.rewardBox{text-align:center}
+.rewardBox .n{font-size:20px;font-weight:900;font-variant-numeric:tabular-nums;color:var(--gold-d);display:flex;align-items:center;justify-content:center;gap:4px}
+.rewardBox .n svg{width:17px;height:17px}
+.rewardBox .n.xp{color:#4E8C4A}
+.rewardBox .l{font-size:11px;color:var(--ink-soft);margin-top:2px}
+.firstTag{
+ display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:700;color:#8F2F1E;
+ background:#F7DFD4;border-radius:999px;padding:4px 12px;margin-top:6px;
+}
+.firstTag svg{width:14px;height:14px}
+.btnBig{
+ display:block;width:100%;padding:14px 0;border-radius:14px;font-size:17px;font-weight:700;
+ color:#FFF8E6;background:linear-gradient(180deg,var(--cinnabar),var(--cinnabar-d));
+ box-shadow:0 5px 0 #8F2F1E;margin-top:14px;
+}
+.btnBig:active{transform:translateY(3px);box-shadow:0 2px 0 #8F2F1E}
+
+/* splash & modal */
+#splash{
+ position:absolute;top:0;left:0;right:0;bottom:0;z-index:80;background:
+ radial-gradient(circle at 50% 8%,rgba(255,248,220,.9) 0%,rgba(255,240,190,.25) 18%,transparent 38%),
+ linear-gradient(180deg,#A8D8E4 0 30%,#BFE3EA 52%,#2A93A6 52% 100%);
+ display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+ transition:opacity .5s;
+}
+#splash::before{
+ content:"";position:absolute;left:0;right:0;bottom:52%;height:26px;pointer-events:none;
+ background:linear-gradient(180deg,rgba(255,255,255,.28),rgba(255,255,255,0));
+}
+#splash.hide{opacity:0;pointer-events:none}
+#splash .logo{
+ font-family:var(--serif);font-weight:900;font-size:44px;letter-spacing:6px;color:#FFF8E6;
+ text-shadow:0 3px 0 rgba(169,59,39,.55),0 10px 24px rgba(22,50,60,.35);
+ padding:0 26px;
+}
+#splash .sub{color:#F3F7E8;font-size:13px;letter-spacing:3px;opacity:.9}
+#splash .orn{color:#F3F7E8;font-size:12px;letter-spacing:2px;opacity:.7}
+#splash .start{
+ margin-top:22px;padding:16px 54px;border-radius:999px;font-size:20px;font-weight:700;letter-spacing:6px;
+ color:#7A5B0F;background:var(--paper);box-shadow:0 6px 0 rgba(0,0,0,.18),var(--shadow);
+}
+#splash .start:active{transform:translateY(3px);box-shadow:0 3px 0 rgba(0,0,0,.18)}
+#splash .hint{font-size:11px;color:rgba(243,247,232,.8);margin-top:20px}
+.splashFish{width:150px;height:60px;animation:swim 2.6s ease-in-out infinite}
+@keyframes swim{50%{transform:translateY(-8px)}}
+
+
+.rarGlow{transition:box-shadow .3s}
+.rarGlow[data-rar="C"]{box-shadow:inset 0 0 0 1px rgba(154,165,166,.35)}
+.rarGlow[data-rar="U"]{box-shadow:inset 0 0 0 1px rgba(94,156,80,.45)}
+.rarGlow[data-rar="R"]{box-shadow:inset 0 0 0 1px rgba(74,127,196,.55),0 0 22px rgba(74,127,196,.18)}
+.rarGlow[data-rar="EP"]{box-shadow:inset 0 0 0 1px rgba(142,95,196,.6),0 0 30px rgba(142,95,196,.28)}
+.rarGlow[data-rar="L"]{box-shadow:inset 0 0 0 1px rgba(224,169,59,.75),0 0 38px rgba(224,169,59,.4)}
+.rarGlow[data-rar="L"] #weighCanvas{filter:drop-shadow(0 0 6px rgba(224,169,59,.55))}
+.rarGlow[data-rar="EP"] #weighCanvas{filter:drop-shadow(0 0 5px rgba(142,95,196,.5))}
+.modalCard{padding:20px 18px}
+.troList{display:flex;flex-direction:column;gap:8px;margin-bottom:14px}
+.troRow{
+ display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;
+ background:linear-gradient(160deg,#F7F3E6,#EFE9D6);border:1px solid #E7DDBF;
+}
+.troRow.done{background:linear-gradient(160deg,#FFF9E9,#F6E8C8);border-color:#E0C77E}
+.troIco{
+ width:34px;height:34px;border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;
+ background:#E3DCC8;color:#9A8E6C;font-size:15px;
+}
+.troRow.done .troIco{background:linear-gradient(145deg,#FFD97A,#E0A93B);color:#FFF}
+.troIco svg{width:16px;height:16px}
+.troInfo{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.troInfo b{font-size:13.5px;color:#23343B}
+.troInfo span{font-size:11px;line-height:1.4;color:var(--ink-soft)}
+.troSt{font-size:10.5px;font-weight:700;color:#A49B82;flex:none}
+.troRow.done .troSt{color:#B07F1E}
+.bg3d{position:absolute;width:1px;height:1px;opacity:0;pointer-events:none;left:0;top:0}
+/* coins / reward float */
+.floatReward{
+ position:absolute;z-index:70;top:38%;font-size:20px;font-weight:900;
+ font-variant-numeric:tabular-nums;text-shadow:0 2px 6px rgba(255,248,230,.9),0 2px 0 rgba(122,91,15,.35);
+ opacity:0;transform:translateY(8px);transition:opacity .25s,transform .25s;pointer-events:none;
+}
+.floatReward.up{opacity:1;transform:translateY(-26px)}
+.floatReward.fade{opacity:0;transform:translateY(-52px)}
+/* fish-on shake */
+@keyframes stageShake{
+ 10%{transform:translate(6px,-4px)} 30%{transform:translate(-7px,3px)}
+ 50%{transform:translate(5px,2px)} 70%{transform:translate(-4px,-3px)}
+ 90%{transform:translate(3px,1px)}
+}
+#stage.shake{animation:stageShake .45s ease}
+/* HUD chip polish */
+.chip{
+ display:flex;align-items:center;gap:6px;padding:7px 12px;border-radius:999px;
+ background:rgba(251,244,226,.88);border:1px solid rgba(216,193,145,.9);
+ box-shadow:0 4px 12px rgba(22,50,60,.14);backdrop-filter:blur(4px);
+}
+.modalCard h3{font-family:var(--serif);font-weight:900;font-size:18px;margin-bottom:8px}
+.modalCard p{font-size:13px;color:var(--ink-soft);line-height:1.6}
+.offlineNum{font-size:26px;font-weight:900;color:var(--gold-d);font-variant-numeric:tabular-nums;margin:6px 0 2px}
+.offlineSub{font-size:12px;color:var(--ink-soft);margin-bottom:12px}
+
+.settingRow{
+ display:flex;align-items:center;justify-content:space-between;padding:12px 0;
+ border-bottom:1px solid var(--wood-line);font-size:14px;
+}
+.switch{width:52px;height:30px;border-radius:999px;background:#B9C3C0;position:relative;transition:background .2s;flex:none}
+.switch::after{content:"";position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:left .2s;box-shadow:0 1px 3px rgba(0,0,0,.3)}
+.switch.on{background:#4E8C4A}
+.switch.on::after{left:25px}
+
+/* toast */
+#toastWrap{
+ position:absolute;top:60px;left:0;right:0;z-index:70;display:flex;flex-direction:column;
+ align-items:center;gap:8px;pointer-events:none;
+}
+.toast{
+ background:rgba(38,51,59,.88);color:#FBF4E2;font-size:13px;padding:9px 18px;border-radius:999px;
+ box-shadow:var(--shadow);animation:toastIn .3s cubic-bezier(.22,1,.36,1);
+ max-width:88%;
+}
+.toast.gold{background:rgba(122,91,15,.95)}
+.toast.red{background:rgba(169,59,39,.95)}
+@keyframes toastIn{from{transform:translateY(-14px);opacity:0}}
+
+/* contest */
+#contestBar{
+ position:absolute;top:58px;left:50%;transform:translateX(-50%);z-index:21;
+ background:rgba(122,91,15,.94);color:#FFF3D6;font-size:13px;font-weight:700;
+ border-radius:999px;padding:7px 18px;display:none;box-shadow:var(--shadow);
+ font-variant-numeric:tabular-nums;letter-spacing:1px;
+}
+#dangerVig{
+ position:fixed;inset:0;z-index:22;pointer-events:none;opacity:0;transition:opacity .18s;
+ background:radial-gradient(ellipse at center,transparent 52%,rgba(201,60,38,.5) 100%);
+}
+#contestBar.show{display:block}
+
+@media (prefers-reduced-motion:reduce){
+ #splash .splashFish{animation:none}
+ .card{animation:none}
+ #btnAction.flash{animation:none}
+}
+/* currency bar */
+.curBar{display:flex;gap:8px;margin-bottom:12px}
+.curChip{flex:1;display:flex;align-items:center;justify-content:center;gap:5px;padding:8px 2px;border-radius:12px;background:var(--paper-deep);border:1px solid var(--wood-line);font-weight:700;font-size:13px;font-variant-numeric:tabular-nums;white-space:nowrap;min-width:0}
+.curChip .cIco{width:16px;height:16px;flex:none}
+/* stamina bar */
+.staBar{margin-bottom:8px}
+.staBar .barLabel{font-size:11px;color:var(--ink-soft);display:flex;justify-content:space-between;margin-bottom:4px;font-variant-numeric:tabular-nums}
+/* shop tabs */
+.shopTabs{display:flex;margin-bottom:12px;background:var(--paper-deep);border-radius:14px;padding:4px;border:1px solid var(--wood-line)}
+.shopTab{flex:1;padding:9px 0;border-radius:11px;font-size:13px;font-weight:700;color:var(--ink-soft);text-align:center;white-space:nowrap}
+.shopTab.on{background:var(--paper);color:var(--cinnabar);box-shadow:var(--shadow)}
+.shopGroup{margin:14px 0 6px;font-size:12px;color:var(--ink-soft);font-weight:700;letter-spacing:1px}
+.priceG{display:inline-flex;align-items:center;gap:4px;font-weight:700;color:#2F5A8C;font-size:14px;font-variant-numeric:tabular-nums;margin-top:5px}
+.priceS{display:inline-flex;align-items:center;gap:4px;font-weight:700;color:#C98A1B;font-size:14px;font-variant-numeric:tabular-nums;margin-top:5px}
+.priceG svg,.priceS svg{width:15px;height:15px;flex:none}
+.relicOwn{font-size:11px;font-weight:700;color:var(--bamboo);margin-top:3px}
+.durBar{height:6px;border-radius:4px;background:rgba(38,51,59,.12);overflow:hidden;margin-top:5px}
+.durFill{height:100%;background:linear-gradient(90deg,#8FBF6A,#4E8C4A)}
+.durFill.broken{background:#D9482E}
+.shopMeta{font-size:11px;color:var(--ink-soft);margin-top:4px;font-variant-numeric:tabular-nums}
+.rodBadge{display:inline-block;font-size:10px;padding:1px 6px;border-radius:8px;background:rgba(142,159,166,.18);color:var(--ink-soft);margin-left:4px;vertical-align:1px}
+/* weigh buttons */
+.weighBtns{display:flex;flex-direction:column;gap:10px;margin-top:14px}
+.btnBig.alt2{background:#3D6F8E;box-shadow:0 3px 0 #2B5269}
+/* leaderboard */
+.rankTop{display:flex;align-items:center;gap:8px;background:var(--paper-deep);border:1px solid var(--wood-line);border-radius:14px;padding:10px 12px;margin-bottom:10px}
+.rankBest{flex:1;min-width:0;font-size:12px;color:var(--ink-soft)}
+.rankBest b{display:block;font-size:16px;color:var(--cinnabar);font-variant-numeric:tabular-nums}
+.rankMe2{flex:1;min-width:0;font-size:12px;color:var(--ink-soft);text-align:right}
+.rankMe2 b{font-size:16px;color:var(--gold-d);font-variant-numeric:tabular-nums}
+.rankList{border:1px solid var(--wood-line);border-radius:14px;background:var(--paper);overflow:hidden}
+.rankRow{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid var(--wood-line)}
+.rankRow:last-child{border-bottom:none}
+.rankIdx{width:26px;text-align:center;font-weight:900;color:var(--ink-soft);font-variant-numeric:tabular-nums;flex:none}
+.rankIdx.t1{color:#E0A93B}.rankIdx.t2{color:#B8C7CB}.rankIdx.t3{color:#C98A4B}
+.rankName{flex:1;min-width:0;font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.rankName.me{color:var(--cinnabar)}
+.rankSeg{font-size:12px;font-weight:700;color:var(--cinnabar);flex:none}
+.rankScore{font-size:12px;color:var(--ink-soft);font-variant-numeric:tabular-nums;flex:none}
+.rankFoot{margin-top:10px;display:flex;align-items:center;justify-content:space-between;gap:8px;font-size:12px;color:var(--ink-soft);font-variant-numeric:tabular-nums}
+/* repair choice */
+.repairRow{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+</style>
+</head>
+<body>
+<div id="app">
+
+ <div id="stage"><canvas id="gameCanvas"></canvas></div>
+ <!-- hidden 3d bg imgs, painted with drawImage -->
+ <img class="bg3d" id="bg3d_creek" src="bg_creek.jpg" alt="">
+ <img class="bg3d" id="bg3d_lake" src="bg_lake.jpg" alt="">
+ <img class="bg3d" id="bg3d_stream" src="bg_stream.jpg" alt="">
+ <img class="bg3d" id="bg3d_beach" src="bg_beach.jpg" alt="">
+ <img class="bg3d" id="bg3d_ice" src="bg_ice.jpg" alt="">
+
+ <!-- top bar -->
+ <div id="topbar">
+ <div class="chip" id="chipGround"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10c3-4 6-4 9 0s6 4 9 0"/><path d="M3 16c3-4 6-4 9 0s6 4 9 0"/></svg><span id="groundName">Riverside</span></div>
+ <div class="chip rank"><svg class="ico" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 3l2.2 4.6 5 .7-3.6 3.5.9 5-4.5-2.4-4.5 2.4.9-5L4.8 8.3l5-.7z"/></svg><span id="rankName">New Angler</span><span id="rankLv" style="font-variant-numeric:tabular-nums">Lv.1</span><span class="xpWrap"><i id="xpFill"></i></span></div>
+ <div class="chip coin"><svg class="ico" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" fill="#E0A93B"/><circle cx="12" cy="12" r="7" fill="none" stroke="#FFF3D6" stroke-width="2"/><text x="12" y="16.5" text-anchor="middle" font-size="9" font-weight="900" fill="#7A5B0F" font-family="sans-serif">¥</text></svg><b id="coinNum">0</b></div>
+ <button id="btnSound" onclick="toggleSound()" aria-label="SOUND TOGGLE" role="switch" aria-checked="true"></button>
+ </div>
+
+ <div id="contestBar">Fishing Contest in Progress · <span id="contestTime">60</span>s</div>
+
+ <div id="dangerVig"></div>
+
+ <div id="hud">
+ <div class="barRow">
+  <div class="barBox">
+  <div class="barLabel"><span>Tension</span><span id="tensionNum">0</span></div>
+  <div class="barTrack"><div class="barFill tension" id="barTension"></div></div>
+  </div>
+  <div class="barBox">
+  <div class="barLabel"><span>Distance</span><span id="distNum">0</span></div>
+  <div class="barTrack"><div class="barFill dist" id="barDist"></div></div>
+  </div>
+ </div>
+ <div class="barRow" id="fishBarRow" style="display:none">
+  <div class="barBox">
+  <div class="barLabel"><span id="fishBarName">Fish</span><span id="staminaNum">100</span></div>
+  <div class="barTrack"><div class="barFill stamina" id="barStamina"></div></div>
+  </div>
+ </div>
+ <div class="staBar" id="staBarRow">
+  <div class="barLabel"><span>Stamina</span><span id="staNum">100/100</span></div>
+  <div class="barTrack"><div class="barFill stamina" id="barSta"></div></div>
+ </div>
+ <div id="actionWrap">
+  <button id="btnAction" onclick="actBtn()">Cast</button>
+  <button id="btnBait" onclick="pickBait()"><span class="bIco"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 3c2.2 2 2.6 3.6 2.4 5.2-.4 2.8-2.4 3.2-2.4 5.4 0 1.2.6 1.9 1.8 2.4-2.2-.3-3.4-1.5-3.8-3.3-.5-2.4.8-4 1-6 .2-1.2-.2-2.3-1.4-3.1z" opacity=".9"/><circle cx="8.5" cy="15.5" r="1.6"/><circle cx="15.5" cy="16" r="1.6"/></svg></span><span id="baitName">Earthworm</span></button>
+ </div>
+ </div>
+
+ <!-- bottom nav -->
+ <div id="nav">
+ <button class="navItem" onclick="navTo('grounds')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 10c3-4 6-4 9 0s6 4 9 0"/><path d="M3 16c3-4 6-4 9 0s6 4 9 0"/></svg>Grounds</button>
+ <button class="navItem" onclick="navTo('aquarium')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 17c4-6 14-6 18 0"/><path d="M3 11c4-5 14-5 18 0"/><path d="M12 9l1.8 1.8L12 12.6 10.2 10.8z" fill="currentColor" stroke="none"/></svg>Aquarium<span class="dot" id="navAquaDot"></span></button>
+ <button class="navItem" onclick="navTo('shop')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9l2-6h12l2 6"/><path d="M4 9a2.5 2.5 0 005 0 2.5 2.5 0 005 0 2.5 2.5 0 005 0"/><path d="M5 12v8h14v-8"/></svg>Shop</button>
+ <!-- ==SERVER== -->
+ <button class="navItem" onclick="navTo('rank')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21V8"/><path d="M16 21V4"/><path d="M4 21h16"/><path d="M8 8l8-4" opacity=".6"/></svg>LEADERBOARD</button>
+ <!-- ==SERVER_END== -->
+ <button class="navItem" onclick="showTrophies()"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 01-10 0z"/><path d="M7 6H4v2a3 3 0 003 3"/><path d="M17 6h3v2a3 3 0 01-3 3"/></svg>Trophies<span class="dot" id="navTroDot"></span></button>
+ </div>
+
+ <!-- grounds panel -->
+ <div class="panel" id="panelGrounds">
+ <div class="panelHead"><button class="btnBack" onclick="closeAllPanels()" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 5l-7 7 7 7"/></svg></button><div class="panelTitle">Grounds</div></div>
+ <div class="panelBody" id="groundsList"></div>
+ </div>
+
+ <!-- aquarium panel -->
+ <div class="panel" id="panelAquarium">
+ <div class="panelHead"><button class="btnBack" onclick="closeAllPanels()" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 5l-7 7 7 7"/></svg></button><div class="panelTitle">Aquarium</div></div>
+ <div class="panelBody">
+  <div class="statStrip">
+  <div class="statBox"><div class="num" id="aqTotal">0/50</div><div class="lbl">Collected</div></div>
+  <div class="statBox"><div class="num" id="aqIncome">0</div><div class="lbl">Coins/hr</div></div>
+  <div class="statBox"><div class="num" id="aqAll">0</div><div class="lbl">Total Catch</div></div>
+  </div>
+  <div class="tabRow" id="aqTabs"></div>
+  <div class="fishGrid" id="aqGrid"></div>
+ </div>
+ </div>
+
+ <!-- shop panel -->
+ <div class="panel" id="panelShop">
+ <div class="panelHead"><button class="btnBack" onclick="closeAllPanels()" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 5l-7 7 7 7"/></svg></button><div class="panelTitle">Shop</div></div>
+ <div class="panelBody">
+  <div class="curBar">
+  <div class="curChip"><span class="cIco"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" fill="#E0A93B"/><circle cx="12" cy="12" r="7" fill="none" stroke="#FFF3D6" stroke-width="2"/><text x="12" y="16.5" text-anchor="middle" font-size="9" font-weight="900" fill="#7A5B0F" font-family="sans-serif">¥</text></svg></span><span id="curCoins">0</span></div>
+  <div class="curChip"><span class="cIco"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 7.7l5.4-.8z" fill="#5FA8C0" stroke="#E8F4F8" stroke-width="1"/></svg></span><span id="curGems">0</span></div>
+  <div class="curChip"><span class="cIco"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.2 7.3L22 11l-7.8 1.7L12 20l-2.2-7.3L2 11l7.8-1.7z" fill="#E8B84A" stroke="#FFF3D6" stroke-width="1"/></svg></span><span id="curSpirit">0</span></div>
+  </div>
+  <div class="shopTabs">
+  <button class="shopTab on" onclick="setShopTab('rods')">Rods</button>
+  <button class="shopTab" onclick="setShopTab('baits')">Baits</button>
+  <button class="shopTab" onclick="setShopTab('gems')">Gems</button>
+  <button class="shopTab" onclick="setShopTab('spirit')">Spirit Shop</button>
+  </div>
+  <div id="shopList"></div>
+ </div>
+ </div>
+
+ <!-- ==SERVER== -->
+ <!-- rank panel -->
+ <div class="panel" id="panelRank">
+ <div class="panelHead"><button class="btnBack" onclick="closeAllPanels()" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M15 5l-7 7 7 7"/></svg></button><div class="panelTitle">Leaderboard</div></div>
+ <div class="panelBody">
+  <div class="tabRow" id="rankTabs">
+  <button class="tabChip on" data-rk="score">Fishing Rank</button>
+  <button class="tabChip" data-rk="aq">Best Spirit Fish</button>
+  </div>
+  <div class="rankTop">
+  <div class="rankBest">Best Rank<b id="rkBestSeg">--</b><span id="rkBestName" style="font-size:11px"></span></div>
+  <div class="rankMe2">My Best<b id="rkMeRank">#--</b><span id="rkMeSeg"></span> · Score <span id="rkMeScore">0</span></div>
+  <button class="btnSm" onclick="fetchRank()">Refresh</button>
+  <button class="btnSm" style="background:linear-gradient(180deg,#4A9EC8,#3A7EA6)" onclick="$('overlayTg').classList.add('show'); renderTgUI();">Bind TG</button>
+  </div>
+  <div class="rankList" id="rankList"></div>
+  <div class="rankFoot">
+  <div id="rkCountdown">Daily reward settles in --:--:-- </div>
+  <button class="btnSm alt" id="btnClaimReward" style="display:none" onclick="claimRankReward()">Claim Reward</button>
+  </div>
+ </div>
+ </div>
+ <!-- ==SERVER_END== -->
+
+ <!-- tg bind -->
+ <div class="overlay" id="overlayTg">
+ <div class="card">
+  <div class="cardBody">
+  <div class="cardTitle">Bind Telegram</div>
+  <div class="tgTip">After binding, the leaderboard shows your Telegram avatar, nickname and account automatically.Create a bot in Telegram @BotFather first(@BotFather),Enter the bot username below.</div>
+  <div class="tgRow"><input id="tgBot" class="inp" placeholder="Telegram Bot Username, e.g. MyFishBot"></div>
+  <div class="tgRow" style="display:flex;gap:8px">
+   <button class="btnBuy" style="flex:1" onclick="loadTgWidget()">Telegram Login</button>
+  </div>
+  <div id="tgWidgetBox"></div>
+  <div class="tgDiv">Or fill manually (no Telegram)</div>
+  <div class="tgRow"><input id="tgName" class="inp" placeholder="Nickname (shown on leaderboard)"></div>
+  <div class="tgRow"><input id="tgAcc" class="inp" placeholder="@Account(Optional)"></div>
+  <div class="tgRow"><input id="tgAv" class="inp" placeholder="Avatar Image URL(Optional)"></div>
+  <div class="tgRow" style="display:flex;gap:8px">
+   <button class="btnBuy" style="flex:1" onclick="saveTgManual()">Save</button>
+   <button class="btnBuy" style="flex:1;background:linear-gradient(180deg,#9AA5A6,#7E8A8C);box-shadow:0 3px 0 #5E6A6C" onclick="unbindTg()">Unbind</button>
+  </div>
+  <div id="tgState" class="tgTip"></div>
+  </div>
+ </div>
+ </div>
+
+ <!-- weigh overlay -->
+ <div class="overlay" id="overlayWeigh">
+ <div class="card">
+  <div class="cardBody rarGlow" data-rar="C">
+  <div class="cardTitle">Fish On!</div>
+  <canvas class="weighImg" id="weighCanvas" width="260" height="180"></canvas>
+  <div><span class="rarityTag" id="weighTag">Common</span></div>
+  <div class="fishLine" id="weighName">Crucian Carp</div>
+  <div class="fishLine"><span class="w" id="weighWeight">2.4</span> kg</div>
+  <div class="rewardRow">
+   <div class="rewardBox"><div class="n" id="weighCoins">+30</div><div class="l">Coins</div></div>
+   <div class="rewardBox"><div class="n xp" id="weighXp">+12</div><div class="l">XP</div></div>
+  </div>
+  <div class="firstTag" id="weighFirst" style="display:none"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12l5 5L20 6"/></svg>First Catch · Codex +1</div>
+  <div class="weighBtns">
+   <button class="btnBig" id="btnSell" onclick="sellFish()">Sell <span id="sellCoins">+0</span></button>
+   <button class="btnBig alt2" id="btnRelease" style="display:none" onclick="releaseFish()">Release for Spirit <span id="releaseSpirit">+0</span></button>
+  </div>
+  </div>
+ </div>
+ </div>
+
+ <!-- splash -->
+ <div id="splash">
+ <div class="splashFish"><canvas id="splashFishCv" width="300" height="120" style="width:100%;height:100%"></canvas></div>
+ <div class="logo">Fisherman's Spring</div>
+ <div class="sub">One Rod · One Bait · One Big Catch</div>
+ <div class="orn">5 Grounds · 80 Fish</div>
+ <button class="start" id="btnStart" onclick="startGame()">Start Fishing</button>
+ <div class="hint">Tap to Start · Good Luck, Angler</div>
+ </div>
+
+ <!-- modal -->
+ <div class="overlay" id="overlayModal"><div class="card modalCard" id="modalBody"></div></div>
+
+ <!-- tutorial -->
+ <div id="tutorialOverlay">
+ <div class="tutorialCard">
+  <div class="tutorialIcon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M12 3v14"/><path d="M12 17a4 4 0 01-4 4"/><path d="M8 9c0-3 2-5 4-5s4 2 4 5"/><path d="M8 13h8"/></svg></div>
+  <div class="tutorialTitle" id="tutoTitle">Welcome, Angler!</div>
+  <div class="tutorialText" id="tutoText"></div>
+  <div class="tutorialDots" id="tutoDots"></div>
+  <button class="btnBig" id="tutoBtn" onclick="tutoNext()">Next</button>
+ </div>
+ </div>
+
+ <div id="toastWrap"></div>
+</div>
+
+<script src="https://sad.adsgram.ai/js/sad.min.js"></script>
+<script>
+"use strict";
+// roundRect polyfill for older webviews
+if(!CanvasRenderingContext2D.prototype.roundRect){
+ try{
+ CanvasRenderingContext2D.prototype.roundRect=function(x,y,w,h,r){
+  if(typeof r==='number') r=[r,r,r,r];
+  else if(Object.prototype.toString.call(r)!=='[object Array]') r=[r[0],r[1],r[2],r[3]];
+  r=[r[0]||0,r[1]||0,r[2]||0,r[3]||0];
+  this.moveTo(x+r[0],y);
+  this.lineTo(x+w-r[1],y); this.arcTo(x+w,y,x+w,y+r[1],r[1]);
+  this.lineTo(x+w,y+h-r[2]); this.arcTo(x+w,y+h,x+w-r[2],y+h,r[2]);
+  this.lineTo(x+r[3],y+h); this.arcTo(x,y+h,x,y+h-r[3],r[3]);
+  this.lineTo(x,y+r[0]); this.arcTo(x,y,x+r[0],y,r[0]);
+  this.closePath();
+ };
+ }catch(e){}
+}
+// just log errors, never pop anything (host page injects its own scripts that throw unrelated errors)
+window.__DBG_ERR=[];
+window.addEventListener('error',e=>{
+ try{
+ window.__DBG_ERR.push({t:Date.now(),m:e.message||String(e),f:e.filename||'',l:e.lineno||0,c:e.colno||0});
+ if(window.__DBG_ERR.length>50) window.__DBG_ERR.shift();
+ }catch(_){}
+});
+window.addEventListener('unhandledrejection',e=>{
+ try{
+ window.__DBG_ERR.push({t:Date.now(),m:(e.reason&&e.reason.message)?e.reason.message:String(e.reason),f:'',l:-1});
+ if(window.__DBG_ERR.length>50) window.__DBG_ERR.shift();
+ }catch(_){}
+});
+// data tables
+const RAR = {C:'Common',U:'Rare',R:'Exotic',EP:'Epic',L:'Legendary'};
+const RAR_W = {C:62, U:25, R:10, EP:2.5, L:0.5};  // base spawn weight
+const RAR_PRICE = {C:10, U:18, R:30, EP:55, L:90}; // coins/kg
+const RAR_OFFLINE = {C:2, U:5, R:12, EP:30, L:80}; // aquarium coins/hr
+const RAR_COLOR = {C:'#9AA5A6',U:'#5E9C50',R:'#4A7FC4',EP:'#8E5FC4',L:'#E0A93B'};
+const RAR_ORDER = ['C','U','R','EP','L'];
+const ROD_BASE_DUR={1:350,2:450,3:550,4:700,5:900};
+const RAR_SPIRIT={R:5,EP:15,L:40};
+// fight multiplier by rarity, legendaries fight way harder
+const FIGHT={C:0.8,U:1.0,R:1.25,EP:1.55,L:1.9};
+const FIGHT_IDX={C:0,U:1,R:2,EP:3,L:4};
+const RAR_SCORE={C:2,U:4,R:8,EP:16,L:30};
+const POTIONS=[
+ {id:'s',name:'Small Stamina Potion',heal:20,cost:10},
+ {id:'m',name:'Medium Stamina Potion',heal:50,cost:20},
+ {id:'l',name:'Large Stamina Potion',heal:80,cost:35},
+ {id:'p',name:'Perfect Stamina Potion',heal:100,cost:50},
+];
+const RELIC_DEF={
+ attack_speed:{name:'Swift Relic',desc:'Reel Speed +5% per',costSpirit:100,max:3},
+ swift:{name:'Gale Relic',desc:'Cast Cooldown -15% per',costSpirit:150,max:3},
+ water_wood:{name:'Waterwood Relic',desc:'Bite Wait -10% per',costSpirit:100,max:3},
+ final_dmg:{name:'Finisher Relic',desc:'Sell Price +10% per',costGems:60,max:3},
+ attack:{name:'Strike Relic',desc:'Tension Cap +8% per',costGems:60,max:3},
+ speed:{name:'Speed Relic',desc:'Reel Speed +3% per',costGems:60,max:3},
+};
+const PREFIX_DEF={pow:{name:'Mighty',capPct:0.12,desc:'Tension Cap +12%'},dur:{name:'Durable',durPct:0.25,desc:'Max Durability +25%'}};
+const PREFIX_RODS=[
+ {base:1,prefix:'pow',cost:40,lv:1},{base:1,prefix:'dur',cost:40,lv:1},
+ {base:2,prefix:'pow',cost:120,lv:3},{base:2,prefix:'dur',cost:120,lv:3},
+ {base:3,prefix:'pow',cost:300,lv:6},{base:3,prefix:'dur',cost:300,lv:6},
+];
+const SPEC_FISH=[
+ {id:'jyl',name:'Infernal Giant Carp',gems:400,spirit:500},
+ {id:'cysl',name:'Tide Silver Bass',gems:160,spirit:200},
+ {id:'rysb',name:'Lava Grouper',gems:0,spirit:200},
+ {id:'lyjj',name:'Blaze Gold Koi',gems:160,spirit:0},
+];
+const SEGS=[
+ {id:'bronze',name:'Bronze',min:0,rewardG:10},
+ {id:'silver',name:'Silver',min:100,rewardG:20},
+ {id:'gold',name:'Gold',min:300,rewardG:40},
+ {id:'platinum',name:'Platinum',min:600,rewardG:70},
+ {id:'diamond',name:'Gems',min:1000,rewardG:110},
+ {id:'master',name:'Master',min:1600,rewardG:180},
+];
+function segOf(score){
+ let seg=SEGS[0];
+ for(const sg of SEGS){ if(score>=sg.min) seg=sg; }
+ return seg;
+}
+function segStars(score,seg){
+ const s=Math.min(3,Math.max(0,Math.floor((score-seg.min)/250)));
+ return '★'.repeat(s)+'☆'.repeat(3-s);
+}
+function segLabel(score){ const sg=segOf(score); return sg.name+' '+segStars(score,sg); }
+
+// fish data: id, name, g(ground), r(rare), min~max(kg), d(fight), body/c1/c2/pat/fin/sp(draw), quip
+const FISH = [
+ // riverside
+ {id:'mx',name:'Topmouth Gudgeon',g:'creek',r:'C',min:0.1,max:0.4,d:.15,body:'oval',c1:'#8FA8A5',c2:'#E8EFE6',pat:'none',fin:'normal',sp:'none',quip:'Small fish, big dreams',habitat:'fresh'},
+ {id:'ni',name:'Loach',g:'creek',r:'C',min:0.1,max:0.5,d:.18,body:'eel',c1:'#7A6F5C',c2:'#E3D9C4',pat:'spots',fin:'normal',sp:'whiskers',quip:'Slippery, do not let it escape',habitat:'fresh'},
+ {id:'ma',name:'Horse-mouth Fish',g:'creek',r:'C',min:0.2,max:0.9,d:.22,body:'torpedo',c1:'#9FB6CE',c2:'#F2F6FA',pat:'stripes',fin:'normal',sp:'none',quip:'Big mouth, big temper',habitat:'fresh'},
+ {id:'hs',name:'Yellow Catfish',g:'creek',r:'C',min:0.5,max:1.8,d:.26,body:'oval',c1:'#D9B24A',c2:'#F7EFD8',pat:'spots',fin:'spiky',sp:'whiskers',quip:'Fin spikes, be careful',habitat:'fresh'},
+ {id:'ji',name:'Crucian Carp',g:'creek',r:'C',min:0.3,max:3.5,d:.2,body:'oval',c1:'#9DB3A0',c2:'#EDF2E6',pat:'none',fin:'normal',sp:'none',quip:'The classic first catch',habitat:'fresh'},
+ {id:'lf',name:'Tilapia',g:'creek',r:'U',min:0.8,max:4.5,d:.3,body:'oval',c1:'#6E8C9E',c2:'#E7ECF0',pat:'stripes',fin:'normal',sp:'none',quip:'Stronger than it looks',habitat:'fresh'},
+ {id:'bi',name:'Bream',g:'creek',r:'U',min:1.5,max:7,d:.32,body:'flat',c1:'#AABCC2',c2:'#F0F3EC',pat:'none',fin:'normal',sp:'none',quip:'Flat body, round belly',habitat:'fresh'},
+ {id:'tf',name:'Wuchang Bream',g:'creek',r:'U',min:2,max:9,d:.36,body:'flat',c1:'#8E9CA6',c2:'#E9EFF1',pat:'spots',fin:'normal',sp:'none',quip:'Cousin of Wuchang Bream',habitat:'fresh'},
+ {id:'hs2',name:'Ricefield Eel',g:'creek',r:'U',min:0.5,max:3,d:.34,body:'eel',c1:'#C9A24B',c2:'#F0E3C2',pat:'none',fin:'none',sp:'none',quip:'Hold on to the end',habitat:'fresh'},
+ {id:'qb',name:'Topmouth Culter',g:'creek',r:'R',min:1.5,max:12,d:.45,body:'torpedo',c1:'#8FB4C9',c2:'#F4F8FA',pat:'none',fin:'normal',sp:'none',quip:'Surface splash, that is it',habitat:'fresh'},
+ {id:'ly',name:'Common Carp',g:'creek',r:'R',min:2,max:15,d:.42,body:'oval',c1:'#C9974A',c2:'#F7EDD6',pat:'none',fin:'normal',sp:'whiskers',quip:'Lucky catch, fish for dinner',habitat:'fresh'},
+ {id:'cy',name:'Grass Carp',g:'creek',r:'R',min:3,max:20,d:.5,body:'torpedo',c1:'#7D9B6A',c2:'#EAF0E2',pat:'none',fin:'normal',sp:'none',quip:'Eats grass, fights hard',habitat:'fresh'},
+ {id:'ww',name:'Giant Salamander',g:'creek',r:'EP',min:2,max:12,d:.62,body:'round',c1:'#6E5C4E',c2:'#D8CDBE',pat:'spots',fin:'none',sp:'antenna',quip:'Cave treasure, rare encounter',habitat:'fresh'},
+
+ {id:'pb',name:'Bitterling',g:'creek',r:'C',min:0.05,max:0.3,d:.16,body:'oval',c1:'#E88F5A',c2:'#FBEEDD',pat:'stripes',fin:'fancy',sp:'none',quip:'River rainbow, swims in schools',habitat:'fresh'},
+ {id:'bh',name:'False Gudgeon',g:'creek',r:'C',min:0.05,max:0.25,d:.14,body:'oval',c1:'#8A7A5C',c2:'#EAE0C8',pat:'spots',fin:'normal',sp:'none',quip:'Chubby rock-dweller',habitat:'fresh'},
+ {id:'st',name:'Dark Sleeper',g:'creek',r:'U',min:0.3,max:2.5,d:.3,body:'round',c1:'#6E5C4E',c2:'#D6CBBE',pat:'spots',fin:'normal',sp:'antenna',quip:'Stubborn, never lets go',habitat:'fresh'},
+ {id:'qs',name:'Greenfin Culter',g:'creek',r:'R',min:1,max:10,d:.42,body:'torpedo',c1:'#7A9AA6',c2:'#EAF0F2',pat:'none',fin:'normal',sp:'none',quip:'Cousin of Topmouth, just as fierce',habitat:'fresh'},
+ {id:'gy2',name:'Yellowcheek Carp',g:'creek',r:'EP',min:5,max:40,d:.66,body:'torpedo',c1:'#3E4A3E',c2:'#BCC8BC',pat:'none',fin:'normal',sp:'teeth',quip:'King of freshwater, blazing speed',habitat:'fresh'}, // city lake
+ {id:'bt',name:'White Slender Bream',g:'lake',r:'C',min:0.1,max:0.5,d:.16,body:'torpedo',c1:'#9CB4BC',c2:'#EFF5F4',pat:'line',fin:'normal',sp:'none',quip:'Fastest surface feeder',habitat:'fresh'},
+ {id:'hj',name:'Red Crucian',g:'lake',r:'C',min:0.3,max:2,d:.2,body:'oval',c1:'#D97A4A',c2:'#FBEBDD',pat:'none',fin:'normal',sp:'none',quip:'Star of the park lake',habitat:'fresh'},
+ {id:'wc',name:'Wuchang Fish',g:'lake',r:'U',min:1.5,max:6,d:.3,body:'flat',c1:'#B9A86B',c2:'#F4EEDC',pat:'none',fin:'normal',sp:'none',quip:'A taste of the Yangtze',habitat:'fresh'},
+ {id:'lian',name:'Silver Carp',g:'lake',r:'U',min:2,max:15,d:.34,body:'torpedo',c1:'#8E9AA6',c2:'#EEF1F4',pat:'none',fin:'normal',sp:'none',quip:'Filter-feeding champion',habitat:'fresh'},
+ {id:'yong',name:'Bighead Carp',g:'lake',r:'U',min:3,max:25,d:.38,body:'round',c1:'#7A8792',c2:'#E8ECEE',pat:'spots',fin:'normal',sp:'none',quip:'The famous big-head carp',habitat:'fresh'},
+ {id:'nl',name:'Catfish',g:'lake',r:'R',min:2,max:20,d:.48,body:'oval',c1:'#4E5558',c2:'#C9CEC9',pat:'none',fin:'normal',sp:'whiskers',quip:'Nocturnal bottom hunter',habitat:'fresh'},
+ {id:'hy',name:'Snakehead',g:'lake',r:'R',min:2,max:12,d:.52,body:'torpedo',c1:'#3D4642',c2:'#B8C4BC',pat:'stripes',fin:'spiky',sp:'teeth',quip:'Fierce parent, strikes hard',habitat:'fresh'},
+ {id:'lu',name:'Perch',g:'lake',r:'R',min:1,max:8,d:.46,body:'torpedo',c1:'#6B8F7A',c2:'#E6EEE8',pat:'stripes',fin:'spiky',sp:'none',quip:'Steamed perch, so fresh',habitat:'fresh'},
+ {id:'gui',name:'Mandarin Fish',g:'lake',r:'EP',min:1,max:8,d:.6,body:'oval',c1:'#8B6B4A',c2:'#EFE3CF',pat:'spots',fin:'spiky',sp:'teeth',quip:'Plump when peach blossoms bloom',habitat:'fresh'},
+ {id:'qing',name:'Black Carp',g:'lake',r:'EP',min:5,max:40,d:.68,body:'torpedo',c1:'#3F4A46',c2:'#B4BEBA',pat:'none',fin:'normal',sp:'none',quip:'Lake giant, brag-worthy',habitat:'fresh'},
+ {id:'jl',name:'Koi',g:'lake',r:'L',min:2,max:10,d:.72,body:'oval',c1:'#E0A93B',c2:'#FBF0DC',pat:'retic',fin:'fancy',sp:'none',quip:'Lucky koi, good fortune',habitat:'fresh'},
+
+ {id:'jy2',name:'Goldfish',g:'lake',r:'C',min:0.1,max:1,d:.18,body:'round',c1:'#E8A03B',c2:'#FDF0DC',pat:'none',fin:'fancy',sp:'none',quip:'Park lake showpiece',habitat:'fresh'},
+ {id:'ling',name:'Mud Carp',g:'lake',r:'U',min:1,max:6,d:.3,body:'torpedo',c1:'#8FA89A',c2:'#EEF2EA',pat:'none',fin:'normal',sp:'none',quip:'Southern reservoir staple',habitat:'fresh'},
+ {id:'hg',name:'Spotted Steed',g:'lake',r:'U',min:0.5,max:4,d:.32,body:'oval',c1:'#9B8B6B',c2:'#EDE4D2',pat:'spots',fin:'normal',sp:'none',quip:'Twisted stripes, strong fight',habitat:'fresh'},
+ {id:'nw',name:'Cowtail Catfish',g:'lake',r:'R',min:1,max:6,d:.44,body:'eel',c1:'#5C5048',c2:'#D2C6B8',pat:'none',fin:'normal',sp:'whiskers',quip:'Yellow cat cousin, long tail',habitat:'fresh'},
+ {id:'ml',name:'Japanese Eel',g:'lake',r:'R',min:0.5,max:4,d:.5,body:'eel',c1:'#4E5550',c2:'#C6CCC6',pat:'spots',fin:'none',sp:'none',quip:'Slippery river-sea traveler',habitat:'migrate'}, // mountain stream
+ {id:'xsb',name:'Brook Grouper',g:'stream',r:'C',min:0.05,max:0.4,d:.2,body:'oval',c1:'#7D8E6B',c2:'#E8EEE0',pat:'spots',fin:'normal',sp:'none',quip:'Fighter of the stream',habitat:'fresh'},
+ {id:'kfl',name:'Pale Chub',g:'stream',r:'C',min:0.05,max:0.5,d:.22,body:'torpedo',c1:'#8FBF8F',c2:'#EFF5E8',pat:'stripes',fin:'fancy',sp:'none',quip:'Prettiest fish in spring',habitat:'fresh'},
+ {id:'sl',name:'Stone Labeo',g:'stream',r:'C',min:0.05,max:0.3,d:.18,body:'oval',c1:'#8A7F68',c2:'#EAE3D4',pat:'none',fin:'normal',sp:'none',quip:'Bottom-hugging rock fish',habitat:'fresh'},
+ {id:'cf',name:'Longfin Chub',g:'stream',r:'U',min:0.1,max:0.8,d:.28,body:'torpedo',c1:'#C46A5E',c2:'#F7E7E0',pat:'stripes',fin:'fancy',sp:'none',quip:'Stream rainbow',habitat:'fresh'},
+ {id:'gc',name:'Barbel',g:'stream',r:'U',min:0.1,max:0.9,d:.3,body:'oval',c1:'#7E8FAA',c2:'#EDF1F6',pat:'none',fin:'normal',sp:'none',quip:'Thick lips, greedy bites',habitat:'fresh'},
+ {id:'xg',name:'Stream Chub',g:'stream',r:'U',min:0.1,max:0.6,d:.26,body:'torpedo',c1:'#6FA8A2',c2:'#E6F2EF',pat:'none',fin:'normal',sp:'none',quip:'Handsome stream fish',habitat:'fresh'},
+ {id:'cy2',name:'Barbel Chub',g:'stream',r:'R',min:1,max:8,d:.48,body:'torpedo',c1:'#A8A065',c2:'#F0EDDB',pat:'none',fin:'normal',sp:'none',quip:'Red eyes, sharp sight',habitat:'fresh'},
+ {id:'jy',name:'Creek Warrior',g:'stream',r:'EP',min:2,max:15,d:.66,body:'torpedo',c1:'#C2A25A',c2:'#F6EED8',pat:'stripes',fin:'normal',sp:'none',quip:'King of the stream',habitat:'fresh'},
+
+ {id:'hq',name:'Spotted Loach',g:'stream',r:'C',min:0.05,max:0.3,d:.16,body:'eel',c1:'#8A6B4E',c2:'#E8DCC4',pat:'stripes',fin:'normal',sp:'whiskers',quip:'Patterned stream sprite',habitat:'fresh'},
+ {id:'xun',name:'Sturgeon',g:'stream',r:'L',min:10,max:80,d:.8,body:'torpedo',c1:'#5C666E',c2:'#D6DEE2',pat:'none',fin:'spiky',sp:'antenna',quip:'Living fossil, rare',habitat:'migrate'},
+ {id:'xl',name:'Lenok',g:'stream',r:'EP',min:1,max:8,d:.58,body:'torpedo',c1:'#7A8B9B',c2:'#E6ECF0',pat:'spots',fin:'normal',sp:'none',quip:'Cold-water fish of alpine streams',habitat:'fresh'},
+ {id:'xz',name:'Brook Trout',g:'stream',r:'R',min:0.5,max:6,d:.48,body:'torpedo',c1:'#6E8A5A',c2:'#DEE8D6',pat:'spots',fin:'normal',sp:'none',quip:'Rainbow hunter of the creek',habitat:'fresh'},
+ {id:'sya',name:'Mountain Trout',g:'stream',r:'U',min:0.3,max:3,d:.34,body:'torpedo',c1:'#C9A24B',c2:'#F2E6C8',pat:'spots',fin:'normal',sp:'none',quip:'Cherry-blossom season treat',habitat:'fresh'}, // sunny beach
+ {id:'sd',name:'Sardine',g:'beach',r:'C',min:0.05,max:0.4,d:.15,body:'torpedo',c1:'#AFC4C8',c2:'#F6FAFA',pat:'none',fin:'normal',sp:'none',quip:'Swarms by the netful',habitat:'sea'},
+ {id:'xhy',name:'Little Yellow Croaker',g:'beach',r:'C',min:0.2,max:1.5,d:.2,body:'oval',c1:'#E0B24A',c2:'#FBF0DC',pat:'none',fin:'normal',sp:'none',quip:'Salty, the taste of the sea',habitat:'sea'},
+ {id:'chang',name:'Pomfret',g:'beach',r:'U',min:0.5,max:4,d:.3,body:'flat',c1:'#B8C7CB',c2:'#F2F7F7',pat:'none',fin:'normal',sp:'none',quip:'Silvery shining disc',habitat:'sea'},
+ {id:'hd',name:'Black Seabream',g:'beach',r:'U',min:0.5,max:4,d:.34,body:'oval',c1:'#4E5A5E',c2:'#C6CFCE',pat:'stripes',fin:'normal',sp:'none',quip:'Regular of the reefs',habitat:'sea'},
+ {id:'dy',name:'Hairtail',g:'beach',r:'R',min:0.5,max:3,d:.44,body:'eel',c1:'#BCC8CD',c2:'#EDF2F2',pat:'bars',fin:'none',sp:'teeth',quip:'Silver ribbon, fierce bite',habitat:'sea'},
+ {id:'hl',name:'Sea Bass',g:'beach',r:'R',min:2,max:15,d:.5,body:'torpedo',c1:'#5E7E92',c2:'#E3EEF2',pat:'none',fin:'normal',sp:'none',quip:'Sea perch fights harder',habitat:'sea'},
+ {id:'hm',name:'Conger Eel',g:'beach',r:'R',min:1,max:10,d:.54,body:'eel',c1:'#6E7A74',c2:'#CDD6D0',pat:'spots',fin:'none',sp:'teeth',quip:'Slippery and ferocious',habitat:'sea'},
+ {id:'sb',name:'Grouper',g:'beach',r:'EP',min:3,max:40,d:.7,body:'round',c1:'#7A6A52',c2:'#E6DCCB',pat:'spots',fin:'normal',sp:'none',quip:'Reef boss, immense power',habitat:'sea'},
+ {id:'nm',name:'Lemon Shark',g:'beach',r:'L',min:10,max:80,d:.85,body:'torpedo',c1:'#8A9AA0',c2:'#EDF2F2',pat:'none',fin:'spiky',sp:'teeth',quip:'A baby shark? Bold move',habitat:'sea'},
+
+ {id:'zy',name:'Grey Mullet',g:'beach',r:'U',min:1,max:8,d:.32,body:'torpedo',c1:'#7E98A8',c2:'#E8F0F2',pat:'none',fin:'normal',sp:'none',quip:'Coastal common, eats all',habitat:'sea'},
+ {id:'hg2',name:'Yellow Drum',g:'beach',r:'U',min:1,max:6,d:.3,body:'oval',c1:'#D9A24A',c2:'#F8EED8',pat:'none',fin:'normal',sp:'none',quip:'The singing fish',habitat:'sea'},
+ {id:'mj',name:'Spanish Mackerel',g:'beach',r:'R',min:3,max:20,d:.5,body:'torpedo',c1:'#5E86A8',c2:'#E0EEF6',pat:'line',fin:'spiky',sp:'teeth',quip:'High-speed ocean hunter',habitat:'sea'},
+ {id:'sjg',name:'Rock Scorpionfish',g:'beach',r:'U',min:0.3,max:2,d:.34,body:'round',c1:'#8A4E3E',c2:'#E8D6C8',pat:'spots',fin:'spiky',sp:'antenna',quip:'Spiky reef dweller',habitat:'sea'},
+ {id:'bm',name:'Flounder',g:'beach',r:'U',min:1,max:8,d:.4,body:'flat',c1:'#9B8B6B',c2:'#E8E0D0',pat:'spots',fin:'normal',sp:'none',quip:'Eyes on one side, changes color',habitat:'sea'},
+ {id:'sy',name:'Hilsa Shad',g:'beach',r:'EP',min:2,max:10,d:.62,body:'torpedo',c1:'#A8C8D8',c2:'#EAF4F8',pat:'stripes',fin:'normal',sp:'none',quip:'River-sea migrant, hard to find',habitat:'migrate'}, // ice lake
+ {id:'yy',name:'Icefish',g:'ice',r:'C',min:0.05,max:0.3,d:.18,body:'eel',c1:'#D0DCDF',c2:'#F3F8F7',pat:'none',fin:'normal',sp:'none',quip:'Transparent sprite under ice',habitat:'fresh'},
+ {id:'bg',name:'Lake Whitefish',g:'ice',r:'U',min:0.5,max:3,d:.32,body:'oval',c1:'#9FB4B8',c2:'#EEF4F2',pat:'none',fin:'normal',sp:'none',quip:'Creamy taste of the snowland',habitat:'sea'},
+ {id:'hxd',name:'Arctic Char',g:'ice',r:'U',min:1,max:6,d:.36,body:'torpedo',c1:'#C96A54',c2:'#F5E6DE',pat:'spots',fin:'normal',sp:'none',quip:'Red spots like snow flames',habitat:'sea'},
+ {id:'xy',name:'Cod',g:'ice',r:'U',min:1,max:10,d:.38,body:'torpedo',c1:'#7E8B8E',c2:'#E2EAE9',pat:'none',fin:'normal',sp:'whiskers',quip:'Deep-sea dweller, cold-proof',habitat:'sea'},
+ {id:'ht',name:'Rainbow Trout',g:'ice',r:'R',min:1,max:8,d:.48,body:'torpedo',c1:'#8FB48C',c2:'#E9F1E6',pat:'stripes',fin:'normal',sp:'none',quip:'Carries a rainbow',habitat:'sea'},
+ {id:'gy',name:'Pike',g:'ice',r:'R',min:3,max:15,d:.56,body:'torpedo',c1:'#5A6E56',c2:'#C6D2BE',pat:'spots',fin:'spiky',sp:'teeth',quip:'Lake bully, bites anything',habitat:'sea'},
+ {id:'shw',name:'Salmon',g:'ice',r:'R',min:3,max:12,d:.52,body:'torpedo',c1:'#C96A6E',c2:'#F2E3E0',pat:'stripes',fin:'normal',sp:'none',quip:'Migrant warrior, swims upstream',habitat:'migrate'},
+ {id:'zl',name:'Taimen',g:'ice',r:'EP',min:5,max:50,d:.75,body:'torpedo',c1:'#8B7A5A',c2:'#EAE0CC',pat:'spots',fin:'normal',sp:'none',quip:'Ancient beast of the ice lake',habitat:'sea'},
+ {id:'xy2',name:'Snowland Koi',g:'ice',r:'L',min:2,max:8,d:.78,body:'oval',c1:'#F0E3C0',c2:'#FBF7EC',pat:'retic',fin:'fancy',sp:'none',quip:'Mascot of the snowland',habitat:'fresh'},
+
+ {id:'jx',name:'Burbot',g:'ice',r:'R',min:2,max:10,d:.5,body:'eel',c1:'#5C6E5A',c2:'#D4DED2',pat:'none',fin:'normal',sp:'whiskers',quip:'Cod cousin of the deep lake',habitat:'fresh'},
+ {id:'gbg',name:'Peled',g:'ice',r:'EP',min:3,max:15,d:.6,body:'torpedo',c1:'#8EA8BE',c2:'#EAF0F6',pat:'none',fin:'normal',sp:'none',quip:'Noble of cold lakes',habitat:'fresh'},
+ {id:'xhy2',name:'Kaluga Sturgeon',g:'ice',r:'EP',min:10,max:60,d:.75,body:'torpedo',c1:'#5E666E',c2:'#D8E0E4',pat:'none',fin:'spiky',sp:'antenna',quip:'Northern giant, caviar source',habitat:'fresh'},
+ {id:'bjg',name:'Arctic Salmon',g:'ice',r:'R',min:2,max:12,d:.52,body:'torpedo',c1:'#7A9AAA',c2:'#E4EEF2',pat:'spots',fin:'normal',sp:'none',quip:'Arctic visitor, fine scales',habitat:'fresh'},
+ {id:'hx',name:'Lake Trout',g:'ice',r:'U',min:2,max:12,d:.42,body:'torpedo',c1:'#6E8A6A',c2:'#DEE8DA',pat:'spots',fin:'normal',sp:'none',quip:'Deep cold-water fish, strong fight',habitat:'fresh'}, // shop-only, not catchable
+ {id:'jyl',name:'Infernal Giant Carp',g:'spec',r:'L',min:8,max:60,d:.9,body:'oval',c1:'#E05A3E',c2:'#FBE8DD',pat:'stripes',fin:'fancy',sp:'whiskers',quip:'Shop exclusive, blazing red',habitat:'spec'},
+ {id:'cysl',name:'Tide Silver Bass',g:'spec',r:'EP',min:3,max:25,d:.72,body:'torpedo',c1:'#6E93AC',c2:'#E6EFF4',pat:'none',fin:'normal',sp:'none',quip:'Shop exclusive, rides the tide',habitat:'spec'},
+ {id:'rysb',name:'Lava Grouper',g:'spec',r:'EP',min:4,max:35,d:.76,body:'round',c1:'#8E5A4A',c2:'#F0DCD2',pat:'spots',fin:'normal',sp:'none',quip:'Shop exclusive, cloaked in lava',habitat:'spec'},
+ {id:'lyjj',name:'Blaze Gold Koi',g:'spec',r:'EP',min:2,max:15,d:.68,body:'oval',c1:'#E8923E',c2:'#FBEEDC',pat:'retic',fin:'fancy',sp:'whiskers',quip:'Shop exclusive, golden flames',habitat:'spec'},
+];
+
+const GROUNDS = [
+ {id:'creek', name:'Riverside', unlock:1, desc:'Home creek among bamboo groves'},
+ {id:'lake', name:'City Lake', unlock:3, desc:'Big lake in the city park'},
+ {id:'stream',name:'Mountain Stream', unlock:6, desc:'Clear, swift mountain stream'},
+ {id:'beach', name:'Sunny Beach', unlock:10, desc:'Blue sea, reefs everywhere'},
+ {id:'ice', name:'Ice Lake', unlock:15, desc:'Frozen lake, silent snow'},
+];
+
+const RODS = [
+ {id:1,name:'Bamboo Rod',speed:1.0,cap:70,cost:0,desc:'Handed down from Grandpa, still works',maxDur:350,unlock:1},
+ {id:2,name:'Fiberglass Rod',speed:1.3,cap:82,cost:800,desc:'Durable, for advancing beginners',maxDur:450,unlock:3},
+ {id:3,name:'Carbon Rod',speed:1.65,cap:96,cost:3000,desc:'Feather-light, fast reeling',maxDur:550,unlock:6},
+ {id:4,name:'Titanium Rod',speed:2.05,cap:110,cost:9000,desc:'Choice of the pros',maxDur:700,unlock:10},
+ {id:5,name:'Legendary Rod',speed:2.5,cap:126,cost:25000,desc:'A legendary weapon',maxDur:900,unlock:15},
+];
+
+const BAITS = [
+ {id:'worm',name:'Earthworm',unlock:0,fee:0,bias:{},bite:1.0,wb:1.0,desc:'All-round bait, fish love it',ico:'worm'},
+ {id:'dough',name:'Dough',unlock:100,fee:3,bias:{C:6,U:4},bite:1.05,wb:1.05,desc:'Small fish favorite, steady bites',ico:'dough'},
+ {id:'corn',name:'Corn',unlock:250,fee:6,bias:{R:6,U:6},bite:1.1,wb:1.12,desc:'Big fish love corn, worth the wait',ico:'corn'},
+ {id:'shrimp',name:'Shrimp',unlock:800,fee:12,bias:{R:12,EP:6},bite:0.9,wb:1.08,desc:'Targets big fish, faster bites',ico:'shrimp'},
+ {id:'blood',name:'Bloodworm',unlock:2000,fee:25,bias:{EP:10,R:6,U:2},bite:0.75,wb:1.05,desc:'Rich scent, attracts Epic fish',ico:'blood'},
+ {id:'lure',name:'Soft Lure',unlock:5000,fee:40,bias:{R:8,EP:10,L:3},bite:0.8,wb:1.15,desc:'King of lures, chase Legendary',ico:'lure'},
+];
+
+const RANK_NAMES = ['New Angler','Novice Angler','Creek Angler','Lake Angler','River Angler','Beach Rookie','Reef Master','Captain','Ocean Fisher','Fishing Sage','River God','Lake God','Sea God','Polar King','God of Anglers'];
+function rankName(lv){ return lv<=15 ? RANK_NAMES[lv-1] : 'Legendary Fisher · Lv'+lv; }
+function xpToNext(lv){ return Math.round(45*Math.pow(lv,1.35)); }
+
+// state & save
+const SAVE_KEY='fisherSpringSave_v1';
+let S={
+ coins:0, xp:0, level:1, rod:0, ground:'creek', bait:'worm',
+ baits:['worm'], aquarium:{}, contest:{best:{}},
+ stats:{caught:0, earned:0, casts:0, species:0, bestW:0, bestName:'', rare:0},
+ sound:true, last:Date.now(),
+ achievements:{}, tutorialDone:false,
+ gems:0, spirit:0,
+ stamina:100, staminaT:20, staminaPack:0,
+ rods:null, rod:0,
+ relics:{}, boughtFish:[],
+ score:0, name:'ANGLERS', playerId:'', rankReward:0,
+ adsLeft:3, adsT:0,               // ad repair
+ adsGemsLeft:3, adsSpiritLeft:2,  // ad rewards
+ tg:{name:'',account:'',avatar:''}
+};
+const fishById={}; FISH.forEach(f=>fishById[f.id]=f);
+function fishOf(g){ return FISH.filter(f=>f.g===g); }
+function groundOf(g){ return GROUNDS.find(x=>x.id===g); }
+function groundUnlocked(g){ return S.level >= groundOf(g).unlock; }
+function rodInst(){ return S.rods[S.rod]; }
+function rodNow(){
+ const inst=S.rods[S.rod], base=RODS[inst.base-1];
+ const relic=n=>S.relics[n]||0;
+ return {
+ id:base.id, name:(inst.prefix?PREFIX_DEF[inst.prefix].name+'·':'')+base.name,
+ speed:base.speed*(1+relic('attack_speed')*0.05+relic('speed')*0.03),
+ cap:Math.round(base.cap*(1+(inst.prefix==='pow'?PREFIX_DEF.pow.capPct:0)+relic('attack')*0.08)),
+ maxDur:Math.round(base.maxDur*(1+(inst.prefix==='dur'?PREFIX_DEF.dur.durPct:0))),
+ base, inst
+ };
+}
+function addGems(n){
+ S.gems=Math.max(0,S.gems+Math.floor(n)); if(S.gems>999999999)S.gems=999999999;
+ renderTop();
+}
+function addSpirit(n){
+ S.spirit=Math.max(0,S.spirit+Math.floor(n)); if(S.spirit>999999999)S.spirit=999999999;
+ renderTop();
+}
+function addStamina(n){
+ S.stamina=Math.min(100,Math.max(0,S.stamina+n));
+ renderHud(); renderBtn();
+}
+function damageRod(n){
+ const inst=rodInst(); if(!inst) return;
+ inst.dur=Math.max(0,inst.dur-n);
+ if(inst.dur<=0){ toast('"'+rodNow().name+'" is broken, repair at the shop','red'); }
+ save();
+}
+// migrate old saves: rod was a number, now it's an instance array
+function migrateSave(d){
+ if(!Array.isArray(d.rods)){
+ d.rods=RODS.map(r=>({base:r.id,prefix:'',dur:r.maxDur,max:r.maxDur}));
+ d.rod=Math.min(Math.max((d.rod||1)-1,0),RODS.length-1);
+ }
+ const D={gems:0,spirit:0,stamina:100,staminaT:20,staminaPack:0,relics:{},boughtFish:[],score:0,name:'ANGLERS',playerId:'',rankReward:0,adsLeft:3,adsT:0,adsGemsLeft:3,adsSpiritLeft:2,tg:{name:'',account:'',avatar:''},achievements:{},tutorialDone:false};
+ for(const k in D){ if(d[k]===undefined) d[k]=D[k]; }
+ if(d.stats===undefined) d.stats={caught:0,earned:0,casts:0,species:0,bestW:0,bestName:'',rare:0};
+ if(d.stats.rare===undefined) d.stats.rare=0;
+ if(d.stats.earned===undefined) d.stats.earned=0;
+ if(d.staminaT>20) d.staminaT=20;
+ for(const r of d.rods){ if(r.max===undefined) r.max=r.dur; }
+}
+function baitNow(){ return BAITS.find(b=>b.id===S.bait); }
+function collectedCount(){ return Object.keys(S.aquarium).length; }
+function offlineRate(){
+ let r=0; for(const id in S.aquarium){ r+=RAR_OFFLINE[fishById[id].r]; }
+ return r;
+}
+function addXp(n){
+ S.xp+=n;
+ while(S.xp>=xpToNext(S.level)){
+ S.xp-=xpToNext(S.level); S.level++;
+ if(S.level<=15){ toast('Level up! Now: '+rankName(S.level),'gold'); }
+ }
+ checkAchievements();
+ renderTop();
+}
+function addCoins(n){
+ const delta=Math.floor(n);
+ S.coins=Math.floor(S.coins+delta);
+ if(S.coins>999999999){S.coins=999999999;}
+ renderTop();
+ if(delta>0) floatReward('+'+fmt(delta),'#E0A93B');
+}
+const ACHIEVEMENTS=[
+ {id:'first_catch',name:'First Catch',desc:'Land your very first fish',r:{coins:50}},
+ {id:'species_10',name:'Species Hunter',desc:'Collect 10 species',r:{gems:3}},
+ {id:'rare_catch',name:'Rare Prize',desc:'Land a Rare or better fish',r:{spirit:2}},
+ {id:'big_one',name:'Big One',desc:'Catch a 5 kg+ fish',r:{gems:2}},
+ {id:'earner',name:'Money Maker',desc:'Earn 1,000 Coins in total',r:{gems:5}},
+ {id:'cast_master',name:'Cast Master',desc:'Cast your line 100 times',r:{gems:3}},
+ {id:'species_40',name:'Aquarium Fan',desc:'Collect 40 species',r:{gems:10}},
+ {id:'level_5',name:'Rising Star',desc:'Reach level 5',r:{gems:3}},
+];
+function achDone(id){ return !!S.achievements[id]; }
+function achCheckFn(a){
+ switch(a.id){
+ case 'first_catch': return S.stats.caught>=1;
+ case 'species_10': return collectedCount()>=10;
+ case 'rare_catch': return S.stats.rare>=1;
+ case 'big_one': return S.stats.bestW>=5;
+ case 'earner': return S.stats.earned>=1000;
+ case 'cast_master': return S.stats.casts>=100;
+ case 'species_40': return collectedCount()>=40;
+ case 'level_5': return S.level>=5;
+ }
+ return false;
+}
+function checkAchievements(){
+ let got=false;
+ for(const a of ACHIEVEMENTS){
+ if(achDone(a.id)) continue;
+ if(achCheckFn(a)){
+  S.achievements[a.id]=true; got=true;
+  if(a.r.coins) addCoins(a.r.coins);
+  if(a.r.gems) addGems(a.r.gems);
+  if(a.r.spirit) addSpirit(a.r.spirit);
+  toast('Achievement: '+a.name,'gold');
+  SFX.achievement();
+  const dot=$('navTroDot'); if(dot) dot.style.display='inline-block';
+ }
+ }
+ if(got){ save(); }
+}
+function showTrophies(){
+ acInit();
+ const rows=ACHIEVEMENTS.map(a=>{
+ const done=achDone(a.id);
+ const rw=[]; if(a.r.coins) rw.push(a.r.coins+' Coins'); if(a.r.gems) rw.push(a.r.gems+' Gems'); if(a.r.spirit) rw.push(a.r.spirit+' Spirit');
+ return '<div class="troRow'+(done?' done':'')+'">'
+  +'<div class="troIco">'+(done?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><path d="M4 12l5 5L20 6"/></svg>':'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M8 21h8"/><path d="M12 17v4"/><path d="M7 4h10v5a5 5 0 01-10 0z"/><path d="M7 6H4v2a3 3 0 003 3"/><path d="M17 6h3v2a3 3 0 01-3 3"/></svg>')+'</div>'
+  +'<div class="troInfo"><b>'+a.name+'</b><span>'+a.desc+' · '+rw.join(' · ')+'</span></div>'
+  +'<div class="troSt">'+(done?'Done':'Locked')+'</div>'
+  +'</div>';
+ }).join('');
+ showModal(`<h3>Trophies</h3><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--ink-soft);margin-bottom:8px"><span>Completed: <b style="color:var(--gold)">${ACHIEVEMENTS.filter(achDone).length}/${ACHIEVEMENTS.length}</b></span><span style="opacity:.8">Rewards are granted once</span></div><div class="troList">${rows}</div><button class="btnBig" onclick="closeModal()">Close</button>`);
+}
+// first-run tutorial, 3 quick steps
+const TUTO_STEPS=[
+ ['Welcome, Angler!','Pick a spot in Grounds, then tap the big red CAST button to throw your line into the water.'],
+ ['Watch the float','When the float dives, tap CAST again quickly to set the hook.'],
+ ['Reel it in','Hold the button to reel in — keep Tension under control and don\u2019t let the line snap!'],
+];
+let tutoStep=0;
+function showTutorial(){
+ if(S.tutorialDone) return;
+ tutoStep=0; tutoRender();
+ $('tutorialOverlay').classList.add('show');
+}
+function tutoRender(){
+ const s=TUTO_STEPS[tutoStep];
+ $('tutoTitle').textContent=s[0];
+ $('tutoText').textContent=s[1];
+ $('tutoDots').innerHTML=TUTO_STEPS.map((_,i)=>'<i class="'+(i===tutoStep?'on':'')+'"></i>').join('');
+ $('tutoBtn').textContent=tutoStep<TUTO_STEPS.length-1?'Next':'Start Fishing';
+}
+function tutoNext(){
+ tutoStep++;
+ if(tutoStep>=TUTO_STEPS.length){
+ $('tutorialOverlay').classList.remove('show');
+ S.tutorialDone=true; save();
+ return;
+ }
+ tutoRender();
+}
+function floatReward(txt,color){
+ if(reduceMotion) return;
+ const el=document.createElement('div');
+ el.className='floatReward';
+ el.textContent=txt;
+ el.style.color=color||'#E0A93B';
+ const wrap=document.getElementById('stage');
+ if(!wrap) return;
+ wrap.appendChild(el);
+ el.style.left=(38+Math.random()*24)+'%';
+ setTimeout(()=>{ el.classList.add('up'); },20);
+ setTimeout(()=>{ el.remove(); },1300);
+}
+// catch weight: triangular dist x bait bonus, cap 1.3x surprise
+function fishWeight(f){
+ const base=f.min+(f.max-f.min)*((Math.random()+Math.random())/2);
+ let w=base*baitNow().wb;
+ if(Math.random()<0.08){ w*=1.15; } // surprise big catch
+ w=Math.min(w, f.max*1.3);
+ return Math.max(0.1, Math.round(w*10)/10);
+}
+// species roll: base weight + bait bias
+function rollFish(groundId){
+ const list=fishOf(groundId), bias=baitNow().bias;
+ let tot=0; const ws=[];
+ for(const f of list){
+ let w=RAR_W[f.r]+(bias[f.r]||0);
+ w=Math.max(0.5,w); ws.push(w); tot+=w;
+ }
+ let r=Math.random()*tot;
+ for(let i=0;i<list.length;i++){ r-=ws[i]; if(r<=0) return list[i]; }
+ return list[list.length-1];
+}
+function addFishToAq(f,w){
+ const old=S.aquarium[f.id];
+ const isFirst=!old;
+ if(!old){ S.aquarium[f.id]={count:1,bestW:w}; S.stats.species++; }
+ else{ old.count++; old.bestW=Math.max(old.bestW,w); }
+ return isFirst;
+}
+// persistence
+let apiReady=false;
+function saveLocal(){
+ S.last=Date.now();
+ try{ localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){}
+}
+function save(force){
+ saveLocal();
+ if(apiReady) apiSave(force);
+}
+function load(){
+ try{
+ const raw=localStorage.getItem(SAVE_KEY);
+ if(raw){ const d=JSON.parse(raw); Object.assign(S,d); }
+ }catch(e){}
+ // player id made once, reused for ads/rank/save
+ if(!S.playerId) S.playerId='p'+Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);
+ migrateSave(S);
+ // offline stamina regen: +10 per 30min
+ if(S.last){
+ const off=Math.floor((Date.now()-S.last)/1800000)*10;
+ if(off>0) S.stamina=Math.min(100,S.stamina+off);
+ }
+ // daily reset of ad counts (24h)
+ if(!S.adsT||Date.now()-S.adsT>86400000){ S.adsLeft=3; S.adsGemsLeft=3; S.adsSpiritLeft=2; S.adsT=Date.now(); }
+}
+let apiT=0, apiTimer=null;
+function apiSave(force){
+ if(document.hidden) return; // no network requests while page hidden/destroyed, avoid races
+ const now=Date.now();
+ if(!force && now-apiT<2000){ // 2s throttle: no concurrent API spam on rapid clicks
+ if(!apiTimer){ apiTimer=setTimeout(()=>{ apiTimer=null; apiT=0; apiSave(); },2000); }
+ return;
+ }
+ apiT=now;
+ try{
+ fetch('/api/state',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(S)}).catch(()=>{});
+ }catch(e){}
+}
+function loadServer(){
+ if(location.protocol==='file:') return;
+ try{
+ fetch('/api/state').then(r=>r.json()).then(d=>{
+  if(!d||typeof d!=='object') return;
+  apiReady=true;
+  // merge by timestamp: newer save wins so an old server can't clobber local
+  const sv=d.last||0, lc=S.last||0;
+  if(sv>=lc){
+  Object.assign(S,d);
+  migrateSave(S);
+  try{ localStorage.setItem(SAVE_KEY, JSON.stringify(S)); }catch(e){}
+  }
+  renderSoundBtn(); renderTop(); renderHud(); renderBtn();
+  renderGroundsList(); renderAquarium(); renderShop();
+ }).catch(()=>{});
+ }catch(e){}
+}
+function offlineGain(){
+ const rate=offlineRate(); if(rate<=0) return 0;
+ const hrs=Math.min(8, (Date.now()-S.last)/3600000);
+ return Math.floor(hrs*rate);
+}
+
+// bait icons
+const BAIT_ICON={
+ worm:'<svg viewBox="0 0 24 24" fill="none"><path d="M8 20c3.5-6 9-7 12-13-3 1-5 3-6 6-1.5 3.5-3 5.5-6 7z" fill="#C9685A"/><path d="M10 17c1.5-2.5 4-3 5-5" stroke="#F2A99A" stroke-width="1.4" fill="none"/><circle cx="7.5" cy="19.5" r="1.2" fill="#C9685A"/><circle cx="13" cy="14" r="1" fill="#C9685A"/><circle cx="16" cy="10.5" r=".9" fill="#C9685A"/><circle cx="8" cy="16" r=".7" fill="#F2A99A"/></svg>',
+ dough:'<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="#F0D9A6" stroke="#C9A45E" stroke-width="1.5"/><circle cx="9" cy="10" r="1.4" fill="#D9BE8C"/><circle cx="14" cy="14" r="1.4" fill="#D9BE8C"/></svg>',
+ corn:'<svg viewBox="0 0 24 24"><path d="M8 5c3 1 4.5 3.5 3.5 8C11 17 8.5 18.5 6 17c-1-3 0-6 2-12z" fill="#E8B84A"/><path d="M12 6c2 2.5 2 6 .5 9.5" stroke="#B87F1F" stroke-width="1.2" fill="none"/><path d="M9.5 6.5c2 2 2.5 4.5 1.5 7.5" stroke="#B87F1F" stroke-width="1.2" fill="none"/></svg>',
+ shrimp:'<svg viewBox="0 0 24 24"><path d="M5 17C8 12 14 9 19 8c-1 3-3 5-7 6-3 1-5 2.5-7 3z" fill="#E8806A"/><path d="M5 17l-2 2M8 15l-3 1M12 13l-2.5.5" stroke="#C2553F" stroke-width="1.2"/><circle cx="17" cy="8" r=".8" fill="#C2553F"/></svg>',
+ blood:'<svg viewBox="0 0 24 24"><path d="M7 20c3-5 8-6 10-11-3 .5-5 2-6 4.5C9.8 16.5 8.5 18 7 20z" fill="#C43A3A"/><path d="M12 16c2-3 5-4.5 7-6-1.5.5-3 2-3.5 4-.5 1.5-1.5 2.5-3.5 2z" fill="#C43A3A"/><circle cx="6" cy="18.5" r="1" fill="#C43A3A"/></svg>',
+ lure:'<svg viewBox="0 0 24 24"><path d="M13 5l6 2-3 4-4-1-1 5-3 2 1-6-3-1 4-3z" fill="#4A7FC4" stroke="#2F5A8C" stroke-width="1"/><circle cx="15.5" cy="6.5" r="1.1" fill="#E8806A"/></svg>'
+};
+function baitIcon(id){ return BAIT_ICON[id]||BAIT_ICON.worm; }
+
+// sound engine
+let AC=null, isIOS=/iPhone|iPad|iPod/i.test(navigator.userAgent), iosHintShown=false;
+function acInit(){
+ if(!AC){
+ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ return; }
+ }
+ if(AC.state==='suspended'){ try{ const p=AC.resume(); if(p&&p.catch) p.catch(()=>{}); }catch(_){} }
+ // iOS silent-mode hint(once per session)
+ if(isIOS && !iosHintShown){
+ setTimeout(()=>{
+  try{
+  if(iosHintShown) return;
+  const an=AC.createAnalyser(); const src=AC.createOscillator(); const g=AC.createGain();
+  g.gain.value=0.0001; src.connect(g); g.connect(an); src.start();
+  const d=new Uint8Array(an.fftSize); an.getByteFrequencyData(d);
+  const silent=d.every(v=>v===0);
+  src.stop(); src.disconnect();
+  if(silent){
+   iosHintShown=true;
+   const tw=document.getElementById('toastWrap');
+   if(tw){
+   const h=document.createElement('div');
+   h.className='toast';
+   h.style.background='rgba(38,51,59,.7)';
+   h.textContent='iPhone Turn off silent mode to hear game sounds';
+   tw.appendChild(h);
+   if(tw.children.length>4) tw.removeChild(tw.firstChild);
+   setTimeout(()=>{ try{ h.remove(); }catch(_){} },6000);
+   }
+  }
+  }catch(e){}
+ },600);
+ }
+}
+function t(freq,dur,type,vol,delay=0){
+ if(!S.sound) return; if(!AC) return;
+ try{
+ const t0=AC.currentTime+delay;
+ const o=AC.createOscillator(), g=AC.createGain();
+ o.type=type||'sine'; o.frequency.value=freq;
+ g.gain.setValueAtTime(0.0001,t0);
+ g.gain.linearRampToValueAtTime(Math.min(vol||0.25,0.45), t0+0.008);
+ g.gain.exponentialRampToValueAtTime(0.0001, t0+dur);
+ o.connect(g); g.connect(AC.destination); o.start(t0); o.stop(t0+dur+0.02);
+ }catch(e){}
+}
+function nz(dur,vol,freq,delay=0){
+ if(!S.sound) return; if(!AC) return;
+ try{
+ const t0=AC.currentTime+delay, len=Math.max(1,Math.floor(AC.sampleRate*dur));
+ const buf=AC.createBuffer(1,len,AC.sampleRate), d=buf.getChannelData(0);
+ for(let i=0;i<len;i++){ d[i]=(Math.random()*2-1)*(1-i/len); }
+ const src=AC.createBufferSource(); src.buffer=buf;
+ const f=AC.createBiquadFilter(); f.type='lowpass'; f.frequency.value=freq||1200;
+ const g=AC.createGain(); g.gain.value=Math.min(vol||0.2,0.35);
+ src.connect(f); f.connect(g); g.connect(AC.destination); src.start(t0);
+ }catch(e){}
+}
+const SFX={
+ splash(){ nz(0.5,0.22,900); t(320,0.18,'sine',0.08); },
+ bite(){ t(660,0.09,'sine',0.2); t(880,0.07,'sine',0.12,0.09); },
+ twitch(){ t(520,0.06,'sine',0.1); },
+ hook(){ t(190,0.12,'square',0.2); nz(0.12,0.14,1800); },
+ reel(){ nz(0.04,0.07,4200); },
+ warn(){ t(840,0.09,'sine',0.14); t(840,0.09,'sine',0.14,0.12); },
+ catchF(){ [523,659,784].forEach((f,i)=>t(f,0.16,'triangle',0.2,i*0.09)); nz(0.3,0.1,1400,0.05); },
+ weigh(){ t(1175,0.22,'sine',0.16); t(1568,0.18,'sine',0.1,0.16); },
+ fail(){ t(380,0.12,'sawtooth',0.16); t(240,0.2,'sawtooth',0.16,0.12); t(160,0.3,'sawtooth',0.14,0.28); },
+ coin(){ t(988,0.07,'sine',0.16); t(1319,0.12,'sine',0.14,0.07); },
+ unlock(){ [523,659,784,1046].forEach((f,i)=>t(f,0.14,'triangle',0.18,i*0.08)); },
+ levelup(){ [392,523,659,784].forEach((f,i)=>t(f,0.16,'triangle',0.18,i*0.1)); },
+ escape(){ t(500,0.08,'sine',0.12); t(400,0.1,'sine',0.1,0.09); },
+ buy(){ SFX.coin(); t(660,0.1,'triangle',0.16,0.06); },
+ achievement(){ [784,988,1175,1568].forEach((f,i)=>t(f,0.15,'triangle',0.16,i*0.07)); },
+};
+
+// scene render
+const cvEl=document.getElementById('gameCanvas');
+const cv={w:390,h:700,dpr:1,waterY:430,t:0};
+function fitCanvas(){
+ cv.w=window.innerWidth<=460?window.innerWidth:Math.min(460,window.innerWidth);
+ cv.h=window.innerHeight;
+ cv.dpr=Math.min(1.5,window.devicePixelRatio||1);
+ cvEl.width=Math.round(cv.w*cv.dpr); cvEl.height=Math.round(cv.h*cv.dpr);
+ cv.waterY=cv.h*0.62;
+ gradCache={key:''};
+}
+window.addEventListener('resize',fitCanvas);
+let ctx=cvEl.getContext('2d');
+const reduceMotion=matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+const SCENES={
+ creek:{sky:['#A8D8E4','#E8F6F0'],far:'rgba(126,168,150,.55)',water:['#2A93A6','#145C6E'],waterU:'#0F4A58',deco:'village',bank:'#5E8C5E',bank2:'#7AA87A',part:'leaves'},
+ lake:{sky:['#A8CEE4','#E8F4F8'],far:'rgba(143,175,192,.6)',water:['#3A9AB0','#1B5E72'],waterU:'#124557',deco:'city',bank:'#6E8F8F',bank2:'#8FA9A0',part:'ripple'},
+ stream:{sky:['#B8E4DC','#EAF7F0'],far:'rgba(112,164,138,.6)',water:['#3FA6A0','#1B6E68'],waterU:'#12524C',deco:'mountain',bank:'#6E8C5E',bank2:'#93AB72',part:'petals'},
+ beach:{sky:['#7ED0E8','#F4E9C8'],far:'rgba(159,208,222,.5)',water:['#2FA6C8','#0E6E96'],waterU:'#0A5168',deco:'beach',bank:'#EFD9AC',bank2:'#F4E4C0',part:'spark'},
+ ice:{sky:['#A8C8E0','#EAF2F6'],far:'rgba(175,196,216,.6)',water:['#4A90A8','#23506B'],waterU:'#16394C',deco:'ice',bank:'#E4ECF2',bank2:'#F2F7FA',part:'snow'},
+};
+
+const VIS={phase:'idle',t:0,floatY:0,floatDive:0,rodBend:0,castSwing:0,fish:null,fishX:0,fishY:0,wobble:0,jumpT:-1,splash:0,lineLen:1,dist:100,struggling:false,tired:false,castP:0,castSplash:0,castFlyX:0,castFlyY:0,danger:0};
+let parts=[];
+
+function spawnParticle(g){
+ const sc=SCENES[g]; let p={};
+ if(sc.part==='snow'){ p={x:Math.random()*cv.w,y:-6,v:0.5+Math.random()*1.2,vy:0.8+Math.random()*1.6,r:1+Math.random()*2,kind:'snow'}; }
+ else if(sc.part==='leaves'){ p={x:Math.random()*cv.w,y:-6,v:(Math.random()-.5)*0.4,vy:0.6+Math.random()*0.8,r:2+Math.random()*2,kind:'leaf',ph:Math.random()*6}; }
+ else if(sc.part==='petals'){ p={x:Math.random()*cv.w,y:-6,v:(Math.random()-.5)*0.5,vy:0.9+Math.random()*0.9,r:2+Math.random()*1.5,kind:'petal',ph:Math.random()*6}; }
+ else if(sc.part==='spark'){ p={x:Math.random()*cv.w,y:cv.waterY+Math.random()*cv.h*0.2,v:0,vy:0,r:1.5+Math.random()*1.5,kind:'spark',ph:Math.random()*6}; }
+ else { p={x:Math.random()*cv.w,y:cv.waterY+Math.random()*40,v:0,vy:0,r:1+Math.random()*1.5,kind:'bubble',ph:Math.random()*6}; }
+ parts.push(p); if(parts.length>60)parts.shift();
+}
+function updateParts(dt,g){
+ if(reduceMotion){ parts.length=0; return; }
+ for(const p of parts){
+ p.ph+=dt*2;
+ if(p.kind==='snow'){ p.y+=p.vy*dt*60*0.016; p.x+=p.v*dt*60*0.016; }
+ else if(p.kind==='leaf'||p.kind==='petal'){ p.y+=p.vy*dt*60*0.016; p.x+=p.v*dt*60*0.016+Math.sin(p.ph)*0.4; }
+ else if(p.kind==='spark'){ p.r=1.5+Math.sin(p.ph)*1.2; }
+ else { p.y-=dt*40*0.016; p.r+=dt*0.3*0.016; }
+ }
+ parts=parts.filter(p=>p.y<cv.h+8&&p.y>-10);
+}
+
+// cache gradients per ground+size so we don't rebuild them every frame
+let gradCache={key:''};
+function gradFor(key,make){
+ if(gradCache.key!==key){ gradCache={key:key,g:make()}; }
+ return gradCache.g;
+}
+
+function drawBg3D(g){
+ const el=document.getElementById('bg3d_'+g);
+ if(!el||!el.complete||!el.naturalWidth) return false;
+ const W=cv.w,H=cv.h, iw=el.naturalWidth, ih=el.naturalHeight;
+ const sc=Math.max(W/iw,H/ih), dw=iw*sc, dh=ih*sc;
+ ctx.drawImage(el,(W-dw)/2,(H-dh)/2,dw,dh);
+ return true;
+}
+// plant sway: cut the bg plant strip into columns and shear each column's top sideways.
+// whole grove bends together (shared gust phase) so it arcs like one sheet instead of
+// jittering per column; wider columns keep the bamboo from looking "broken"
+const SWAY_CFG={
+ lake:[{side:'l',w:0.22,a:4.5,n:10,fr:0.85},{side:'r',w:0.22,a:4.5,n:10,fr:0.85}],
+ stream:[{side:'l',w:0.20,a:5,n:10,fr:0.9},{side:'r',w:0.20,a:5,n:10,fr:0.9}],
+ beach:[{side:'l',w:0.20,a:5.5,n:9,fr:0.8}],
+ ice:[{side:'l',w:0.18,a:4,n:9,fr:0.75},{side:'r',w:0.18,a:4,n:9,fr:0.75}]
+};
+function drawBambooWind(g,t){
+ if(reduceMotion) return;
+ const cfgs=SWAY_CFG[g]; if(!cfgs) return;
+ const el=document.getElementById('bg3d_'+g);
+ if(!el||!el.complete||!el.naturalWidth) return;
+ const W=cv.w, wy=cv.waterY;
+ const iw=el.naturalWidth, ih=el.naturalHeight;
+ const sc=Math.max(W/iw,(cv.h)/ih), dw=iw*sc, dh=ih*sc;
+ const ox=(W-dw)/2, oy=(cv.h-dh)/2;
+ const srcY=Math.max(0,-oy), dstY=Math.max(0,oy);
+ const hgt=Math.max(0,wy-dstY+8);
+ if(hgt<20) return;
+ const visW=Math.min(dw,W);
+ const bx0=Math.max(0,ox);
+ // 2 segments per column: lower 55% barely moves (root), upper 45% takes full offset -> arc, not straight tilt
+ const SEG=[[0.55,0.35],[0.46,1.0]];
+ ctx.save();
+ for(const cfg of cfgs){
+ const aw=visW*cfg.w;
+ const bx=cfg.side==='r'?bx0+visW-aw:bx0;
+ const N=cfg.n, a=cfg.a, fr=cfg.fr, colW=aw/N+1;
+ for(let i=0;i<N;i++){
+  const colX=bx+i*(aw/N);
+  const mid=0.4+0.6*Math.min(i/N,(N-i)/N)*2; // bigger sway at edges, steadier near center
+  const sway=Math.sin(t*fr+i*0.18)*0.7 + Math.sin(t*fr*1.7+i*0.4)*0.3; // gust main wave + light secondary wave
+  const dx=sway*a*mid;
+  let yAcc=dstY;
+  for(let k=0;k<SEG.length;k++){
+  const hFrac=SEG[k][0], oFrac=SEG[k][1];
+  const segH=Math.max(2,hgt*hFrac)+ (k<SEG.length-1?3:0);
+  const off=dx*oFrac;
+  const sw=colW/sc, sh=segH/sc; // scale source by cover ratio to avoid blurry over-scaled redraw
+  const sx=(colX-ox)/sc, sy=(srcY+(yAcc-dstY))/sc;
+  ctx.save();
+  ctx.beginPath(); ctx.rect(colX,yAcc,colW,segH); ctx.clip();
+  ctx.transform(1,0,off/Math.max(1,segH),1,0,0);
+  ctx.drawImage(el, sx, sy, sw, sh, colX, yAcc, colW, segH);
+  ctx.restore();
+  yAcc+=hgt*hFrac;
+  }
+ }
+ }
+ ctx.restore();
+}
+// leaf layer: trunks stay put, leaves swing around their base, a few drift down
+const LEAF_CFG={
+ creek:{x0:2,x1:34,y0:8,y1:52,n:14,len:28,amp:9,fr:1.2,colors:['#5C8A4E','#4A7A45','#6FA863']},
+ lake:{x0:0,x1:20,y0:12,y1:55,n:9,len:24,amp:7,fr:0.95,colors:['#4F8A4E','#5FA05C','#3E7A43']},
+ stream:{x0:0,x1:18,y0:12,y1:58,n:10,len:25,amp:7,fr:1.0,colors:['#4F8A4E','#5FA05C','#3E7A43']},
+ beach:{x0:0,x1:18,y0:26,y1:75,n:7,len:34,amp:6,fr:0.8,colors:['#7A9A4E','#8FA85A','#6E8A3E']},
+ ice:{x0:0,x1:16,y0:4,y1:40,n:8,len:16,amp:5,fr:0.75,colors:['#5E8A7A','#4E7A6E','#6FA892']}
+};
+function drawLeaves(g,t){
+ if(reduceMotion) return;
+ const cfg=LEAF_CFG[g]; if(!cfg) return;
+ const W=cv.w,H=cv.h;
+ const x0=cfg.x0*0.01*W, x1=cfg.x1*0.01*W, y0=cfg.y0*0.01*H, y1=cfg.y1*0.01*H;
+ const bw=Math.max(1,x1-x0), bh=Math.max(1,y1-y0);
+ for(let i=0;i<cfg.n;i++){
+ const px=x0+((i*97)%bw), py=y0+((i*53)%bh);
+ const ang=(Math.sin(t*cfg.fr+i*1.7)*0.6+Math.sin(t*0.5+i*2.3)*0.4)*cfg.amp*0.01745;
+ const drift=Math.sin(t*0.7+i*2.3)*5;
+ const len=cfg.len*((i%3)+0.6);
+ ctx.save();
+ ctx.translate(px,py+drift);
+ ctx.rotate(ang);
+ ctx.globalAlpha=0.5+0.32*((i%3)/2);
+ const col=cfg.colors[i%cfg.colors.length];
+ const grad=ctx.createLinearGradient(0,0,0,-len);
+ grad.addColorStop(0,col);
+ grad.addColorStop(1,shade(col,1.4));
+ ctx.fillStyle=grad;
+ ctx.beginPath();
+ ctx.moveTo(0,0);
+ ctx.quadraticCurveTo(len*0.16,-len*0.36,0,-len);
+ ctx.quadraticCurveTo(-len*0.16,-len*0.36,0,0);
+ ctx.fill();
+ ctx.restore();
+ }
+ // a few slow drifters, far & faint
+ for(let i=0;i<4;i++){
+ const tt=(t*16+i*31);
+ const px=x0+((tt*0.9)%bw), py=y0+((tt*1.15)%bh);
+ ctx.save();
+ ctx.translate(px,py);
+ ctx.rotate(tt*0.02);
+ ctx.globalAlpha=0.35;
+ ctx.fillStyle=cfg.colors[i%cfg.colors.length];
+ ctx.beginPath(); ctx.ellipse(0,0,7,2.4,0,0,Math.PI*2); ctx.fill();
+ ctx.restore();
+ }
+ ctx.globalAlpha=1;
+}
+function drawScene(g,t){
+ const sc=SCENES[g], W=cv.w, H=cv.h, wy=cv.waterY, gkey=g+'|'+W+'x'+H;
+ const hasBg=drawBg3D(g);
+ if(hasBg){}
+ if(!hasBg){
+ // fallback: original gradient sky + clouds + distant decor
+ const sky=gradFor(gkey+'|s',()=>{const x=ctx.createLinearGradient(0,0,0,wy); x.addColorStop(0,sc.sky[0]); x.addColorStop(1,sc.sky[1]); return x;});
+ ctx.fillStyle=sky; ctx.fillRect(0,0,W,wy);
+ drawClouds(g,t);
+ drawDeco(g,t);
+ }
+ // shore
+ if(hasBg){
+ // 3d art has the shore already, just a faint fog band at the waterline
+ const wf=ctx.createLinearGradient(0,wy-10,0,wy+30);
+ wf.addColorStop(0,'rgba(255,255,255,.08)');
+ wf.addColorStop(0.55,'rgba(16,90,106,.16)');
+ wf.addColorStop(1,'rgba(16,90,106,.36)');
+ ctx.fillStyle=wf; ctx.fillRect(0,wy-10,W,40);
+ } else {
+ ctx.fillStyle=sc.bank; ctx.beginPath();
+ ctx.moveTo(0,wy); ctx.quadraticCurveTo(W*0.3,wy-8,W*0.5,wy);
+ ctx.quadraticCurveTo(W*0.75,wy+6,W,wy-4); ctx.lineTo(W,wy+14); ctx.lineTo(0,wy+14); ctx.closePath(); ctx.fill();
+ ctx.fillStyle=sc.bank2; ctx.beginPath();
+ ctx.moveTo(0,wy+6); ctx.quadraticCurveTo(W*0.4,wy+12,W,wy+4); ctx.lineTo(W,wy+14); ctx.lineTo(0,wy+14); ctx.closePath(); ctx.fill();
+ }
+ // water: translucent overlay, waterline at wy, 3d texture shows through
+ const wg=gradFor(gkey+'|w',()=>{const x=ctx.createLinearGradient(0,wy,0,H); x.addColorStop(0,sc.water[0]); x.addColorStop(0.7,sc.water[1]); x.addColorStop(1,sc.waterU); return x;});
+ ctx.globalAlpha=hasBg?0.42:1;
+ ctx.fillStyle=wg; ctx.fillRect(0,wy,W,H-wy);
+ ctx.globalAlpha=1;
+ // faint sky reflection at horizon
+ const rf=ctx.createLinearGradient(0,wy,0,wy+Math.max(60,H*0.22));
+ rf.addColorStop(0,'rgba(255,255,255,'+(hasBg?0.18:0.24)+')');
+ rf.addColorStop(1,'rgba(255,255,255,0)');
+ ctx.fillStyle=rf; ctx.fillRect(0,wy,W,Math.max(60,H*0.22));
+ // sun glint band
+ if(!reduceMotion){
+ const hy=wy+(H-wy)*0.28, hp=Math.sin(t*0.5)*0.04+0.5;
+ const hg=ctx.createLinearGradient(0,hy-14,0,hy+14);
+ hg.addColorStop(0,'rgba(255,255,255,0)');
+ hg.addColorStop(0.5,'rgba(255,255,255,'+(0.16+0.09*Math.sin(t*1.3)).toFixed(2)+')');
+ hg.addColorStop(1,'rgba(255,255,255,0)');
+ ctx.fillStyle=hg;
+ ctx.beginPath(); ctx.ellipse(W*0.5,hy,Math.max(120,W*0.4),14,0,0,7); ctx.fill();
+ }
+ drawWaterFX(g,t);
+ if(!hasBg) drawReeds(g,t);
+ drawUnderwater(g,t,hasBg);
+}
+
+function drawClouds(g,t){
+ const W=cv.w, wy=cv.waterY;
+ if(reduceMotion) return;
+ const clouds=g==='beach'?[
+ {x:W*0.12,y:wy*0.18,s:46,v:7}, {x:W*0.55,y:wy*0.3,s:60,v:-5}, {x:W*0.8,y:wy*0.12,s:38,v:4}
+ ]:[
+ {x:W*0.18,y:wy*0.22,s:50,v:5}, {x:W*0.6,y:wy*0.32,s:58,v:-4}, {x:W*0.85,y:wy*0.14,s:40,v:6}
+ ];
+ ctx.save();
+ for(const c of clouds){
+ const cx=((c.x+t*c.v)%(W+c.s*3))-c.s*1.5;
+ const cy=c.y+Math.sin(t*0.35+c.x)*3;
+ const grd=ctx.createRadialGradient(cx,cy,2,cx,cy,c.s*1.3);
+ grd.addColorStop(0,'rgba(255,255,255,.85)');
+ grd.addColorStop(0.7,'rgba(255,255,255,.38)');
+ grd.addColorStop(1,'rgba(255,255,255,0)');
+ ctx.fillStyle=grd;
+ ctx.beginPath();
+ ctx.ellipse(cx-c.s*0.5,cy,c.s*0.62,c.s*0.3,0,0,7);
+ ctx.ellipse(cx,cy-4,c.s*0.55,c.s*0.34,0,0,7);
+ ctx.ellipse(cx+c.s*0.5,cy,c.s*0.6,c.s*0.28,0,0,7);
+ ctx.fill();
+ }
+ ctx.restore();
+}
+function drawDeco(g,t){
+ const W=cv.w, wy=cv.waterY, sky=ctx;
+ sky.save();
+ sky.clip(); // keep within the horizon
+ if(g==='creek'){
+ sky.fillStyle='rgba(126,168,150,.55)';
+ sky.beginPath(); sky.moveTo(0,wy*0.72);
+ sky.quadraticCurveTo(W*0.25,wy*0.5,W*0.5,wy*0.68);
+ sky.quadraticCurveTo(W*0.78,wy*0.44,W,wy*0.6); sky.lineTo(W,wy); sky.lineTo(0,wy); sky.closePath(); sky.fill();
+ // bamboo grove (left)
+ sky.strokeStyle='#2F5D3A'; sky.lineWidth=3;
+ for(let i=0;i<5;i++){
+  const bx=10+i*9, bend=Math.sin(t*0.8+i)*6;
+  sky.beginPath(); sky.moveTo(bx,wy); sky.quadraticCurveTo(bx-4,wy*0.5,bx-2+bend,wy*0.18); sky.stroke();
+  sky.strokeStyle='#3E6B4A';
+  sky.beginPath(); sky.moveTo(bx+5,wy*0.82); sky.quadraticCurveTo(bx+2,wy*0.5,bx+4+bend,wy*0.3); sky.stroke();
+ }
+ // village house
+ for(let i=0;i<3;i++){
+  const hx=W*0.42+i*W*0.16, hs=34+i*6;
+  sky.fillStyle='#F5EFE2'; sky.fillRect(hx,wy-hs,26,hs);
+  sky.fillStyle='#3B4A52'; sky.beginPath();
+  sky.moveTo(hx-3,wy-hs); sky.lineTo(hx+13,wy-hs-14); sky.lineTo(hx+29,wy-hs); sky.closePath(); sky.fill();
+  sky.fillStyle='#6B5B3F'; sky.fillRect(hx+8,wy-14,8,14);
+ }
+ } else if(g==='lake'){
+ sky.fillStyle='rgba(143,175,192,.6)';
+ sky.beginPath(); sky.moveTo(0,wy*0.66);
+ sky.quadraticCurveTo(W*0.3,wy*0.5,W*0.6,wy*0.6);
+ sky.quadraticCurveTo(W*0.85,wy*0.5,W,wy*0.62); sky.lineTo(W,wy); sky.lineTo(0,wy); sky.closePath(); sky.fill();
+ // city skyline
+ sky.fillStyle='rgba(84,110,124,.72)';
+ const bs=[18,34,26,44,30,38,22];
+ let bx=W*0.18;
+ for(const b of bs){ sky.fillRect(bx,wy-b-6,b, b+6); bx+=b+6; }
+ sky.fillStyle='rgba(230,240,244,.9)';
+ let wx2=W*0.2; const wins=[0,3,1,4,2,3,0];
+ for(let i=0;i<wins.length;i++){
+  for(let r=0;r<3;r++){ for(let c=0;c<2;c++){ if((i*7+r*2+c)%3) sky.fillRect(wx2+3+c*5,wy-bs[i]-3+r*6,3,3); } }
+  wx2+=bs[i]+6;
+ }
+ // arch bridge
+ sky.strokeStyle='rgba(90,110,120,.6)'; sky.lineWidth=4;
+ sky.beginPath(); sky.arc(W*0.62,wy-6,46,Math.PI,0); sky.stroke();
+ } else if(g==='stream'){
+ sky.fillStyle='rgba(112,164,138,.55)';
+ sky.beginPath(); sky.moveTo(0,wy*0.6);
+ sky.lineTo(W*0.2,wy*0.34); sky.lineTo(W*0.34,wy*0.62);
+ sky.lineTo(W*0.5,wy*0.3); sky.lineTo(W*0.66,wy*0.6);
+ sky.lineTo(W*0.8,wy*0.36); sky.lineTo(W,wy*0.58); sky.lineTo(W,wy); sky.lineTo(0,wy); sky.closePath(); sky.fill();
+ // waterfall
+ sky.fillStyle='rgba(230,246,242,.85)';
+ sky.beginPath(); sky.moveTo(W*0.34,wy*0.62); sky.lineTo(W*0.3,wy*0.5); sky.lineTo(W*0.38,wy*0.52); sky.closePath(); sky.fill();
+ // pine
+ for(let i=0;i<4;i++){
+  const px=W*0.06+i*W*0.2, ph=26+i*8;
+  sky.fillStyle='#3F6B47';
+  sky.beginPath(); sky.moveTo(px,wy); sky.lineTo(px+7,wy-ph*0.5); sky.lineTo(px+14,wy); sky.closePath(); sky.fill();
+ }
+ } else if(g==='beach'){
+ // sun
+ sky.fillStyle='rgba(250,220,140,.9)'; sky.beginPath(); sky.arc(W*0.82,wy*0.22,26,0,7); sky.fill();
+ sky.fillStyle='rgba(250,220,140,.25)'; sky.beginPath(); sky.arc(W*0.82,wy*0.22,40,0,7); sky.fill();
+ // seagull
+ sky.strokeStyle='rgba(255,255,255,.9)'; sky.lineWidth=2;
+ for(let i=0;i<3;i++){
+  const sx=W*(0.2+i*0.22), sy=wy*(0.3+0.1*Math.sin(t*1.2+i*2));
+  sky.beginPath(); sky.moveTo(sx-7,sy); sky.quadraticCurveTo(sx-3,sy-4,sx,sy); sky.quadraticCurveTo(sx+3,sy-4,sx+7,sy); sky.stroke();
+ }
+ // palm
+ for(let i=0;i<2;i++){
+  const px=W*(0.06+i*0.9), bend=(i?1:-1)*Math.sin(t*0.5)*3;
+  sky.strokeStyle='#7A5230'; sky.lineWidth=5;
+  sky.beginPath(); sky.moveTo(px,wy); sky.quadraticCurveTo(px+bend*2,wy*0.45,px+bend*5,wy*0.18); sky.stroke();
+  sky.strokeStyle='#3E8C5E'; sky.lineWidth=3;
+  for(let j=0;j<5;j++){
+  const a=Math.PI*0.12+j*Math.PI*0.19;
+  sky.beginPath(); sky.moveTo(px+bend*5,wy*0.18); sky.lineTo(px+bend*5+Math.cos(a)*24,wy*0.18+Math.sin(a)*10); sky.stroke();
+  }
+ }
+ } else { // ice
+ // aurora
+ const au=ctx.createLinearGradient(0,0,W*0.6,wy*0.6);
+ au.addColorStop(0,'rgba(120,220,160,.18)'); au.addColorStop(0.5,'rgba(120,180,220,.14)'); au.addColorStop(1,'rgba(180,140,220,.12)');
+ sky.fillStyle=au; sky.fillRect(0,0,W,wy*0.7);
+ // snowy peak
+ sky.fillStyle='rgba(175,196,216,.7)';
+ sky.beginPath(); sky.moveTo(0,wy*0.62);
+ sky.lineTo(W*0.18,wy*0.3); sky.lineTo(W*0.3,wy*0.58);
+ sky.lineTo(W*0.5,wy*0.22); sky.lineTo(W*0.66,wy*0.55);
+ sky.lineTo(W*0.82,wy*0.34); sky.lineTo(W,wy*0.6); sky.lineTo(W,wy); sky.lineTo(0,wy); sky.closePath(); sky.fill();
+ sky.fillStyle='rgba(255,255,255,.85)';
+ sky.beginPath(); sky.moveTo(W*0.18,wy*0.3); sky.lineTo(W*0.14,wy*0.36); sky.lineTo(W*0.21,wy*0.34); sky.closePath(); sky.fill();
+ sky.beginPath(); sky.moveTo(W*0.5,wy*0.22); sky.lineTo(W*0.45,wy*0.3); sky.lineTo(W*0.54,wy*0.28); sky.closePath(); sky.fill();
+ }
+ sky.restore();
+}
+
+function drawWaterFX(g,t){
+ const W=cv.w, wy=cv.waterY, H=cv.h;
+ if(reduceMotion) return;
+ // glints
+ ctx.save();
+ ctx.globalAlpha=0.2;
+ for(let i=0;i<9;i++){
+ const yy=wy+16+i*(H-wy)/7, ph=t*0.6+i*1.3;
+ ctx.fillStyle='#DFF2F5';
+ ctx.beginPath();
+ ctx.ellipse(W*(0.12+0.24*Math.sin(ph)),yy,34+18*Math.sin(ph*1.7),3.4,0,0,7);
+ ctx.fill();
+ }
+ // sun sparkles
+ ctx.globalAlpha=0.3;
+ for(let i=0;i<14;i++){
+ const ph=t*1.2+i*2.4;
+ const xx=W*(0.08+0.84*((i*37)%100)/100)+Math.sin(ph)*14;
+ const yy=wy+22+((i*53)%78)/100*(H-wy-40);
+ const rr=1.4+Math.sin(ph*2)*1;
+ ctx.fillStyle= i%2?'#FFF7DC':'#E8F6F8';
+ ctx.beginPath(); ctx.arc(xx,yy,Math.max(0.6,rr),0,7); ctx.fill();
+ }
+ // ripples
+ ctx.globalAlpha=0.24;
+ for(let i=0;i<4;i++){
+ const rr=((t*14+i*46)%90), xx=W*(0.18+i*0.25), yy=wy+14+i*24;
+ ctx.strokeStyle='#EAF6F8'; ctx.lineWidth=1.5;
+ ctx.beginPath(); ctx.ellipse(xx,yy,rr,rr*0.35,0,0,7); ctx.stroke();
+ }
+ ctx.restore();
+}
+
+// cheap bg fish, faces right
+function drawDecoFish(x,y,size,c1,c2,ang,t,alpha){
+ ctx.save(); ctx.translate(x,y); ctx.rotate(ang); ctx.globalAlpha=alpha;
+ const fl=Math.sin(t*3)*2;
+ ctx.fillStyle=c1;
+ ctx.beginPath(); ctx.ellipse(0,0,size,size*0.42,0,0,7); ctx.fill();
+ ctx.beginPath(); ctx.moveTo(-size*0.35,0);
+ ctx.quadraticCurveTo(-size*0.6,-size*0.3-fl,-size*0.9,-size*0.45-fl);
+ ctx.lineTo(-size*0.55,0);
+ ctx.quadraticCurveTo(-size*0.6,size*0.3+fl,-size*0.9,size*0.45+fl);
+ ctx.closePath(); ctx.fill();
+ ctx.fillStyle=c2; ctx.beginPath(); ctx.ellipse(size*0.12,0,size*0.55,size*0.28,0,0,7); ctx.fill();
+ ctx.fillStyle='#26323A'; ctx.beginPath(); ctx.arc(size*0.5,-size*0.12,size*0.1,0,7); ctx.fill();
+ ctx.fillStyle='#fff'; ctx.beginPath(); ctx.arc(size*0.53,-size*0.15,size*0.04,0,7); ctx.fill();
+ ctx.restore();
+}
+
+function drawReeds(g,t){
+ const W=cv.w, wy=cv.waterY;
+ if(reduceMotion) return;
+ ctx.save();
+ ctx.lineCap='round';
+ const n=g==='beach'?4:7;
+ for(let i=0;i<n;i++){
+ const x=W*(0.06+i*0.13+(i%2?0.03:0));
+ const bend=Math.sin(t*1.1+i*2)*4;
+ // reed stem
+ ctx.strokeStyle=g==='ice'?'rgba(224,236,244,.9)':g==='beach'?'rgba(214,196,150,.95)':'rgba(58,110,72,.9)';
+ ctx.lineWidth=2;
+ ctx.beginPath(); ctx.moveTo(x,wy+10); ctx.quadraticCurveTo(x+3,wy-14,x+bend,wy-34); ctx.stroke();
+ // reed plume
+ ctx.fillStyle=g==='ice'?'rgba(210,226,238,.95)':'rgba(176,142,96,.95)';
+ ctx.beginPath();
+ ctx.ellipse(x+bend,wy-36,4,10,0.2,0,7);
+ ctx.fill();
+ }
+ ctx.restore();
+}
+function drawUnderwater(g,t,hasBg){
+ const W=cv.w, wy=cv.waterY, H=cv.h, bot=H;
+ ctx.save();
+ if(hasBg){
+ // 3d art has the lakebed already, keep only the swimming fish
+ drawDecoFishGroup(g,t);
+ ctx.restore();
+ return;
+ }
+ // lakebed
+ const bg=gradFor(g+'|'+H+'|b',()=>{
+ const x=ctx.createLinearGradient(0,H-70,0,H);
+ if(g==='beach') x.addColorStop(0,'rgba(214,224,210,.5)'); else if(g==='ice') x.addColorStop(0,'rgba(200,222,238,.45)'); else x.addColorStop(0,'rgba(30,110,120,.4)');
+ x.addColorStop(1,'rgba(10,60,70,.55)');
+ return x;
+ });
+ ctx.fillStyle=bg; ctx.fillRect(0,H-70,W,70);
+ // weeds / rocks / ice
+ ctx.globalAlpha=0.6;
+ if(g==='creek'||g==='stream'){
+ ctx.strokeStyle=g==='creek'?'#2E7A4E':'#2E8A6E'; ctx.lineWidth=2.4;
+ for(let i=0;i<10;i++){
+  const xx=W*(0.05+i*0.1), yy=H-6-Math.random()*14, hh=16+Math.random()*26;
+  ctx.beginPath(); ctx.moveTo(xx,yy); ctx.quadraticCurveTo(xx+4,yy-hh*0.5,xx+Math.sin(t*1.5+i)*4,yy-hh); ctx.stroke();
+ }
+ ctx.fillStyle='rgba(120,150,140,.7)';
+ for(let i=0;i<8;i++){ const xx=W*(0.04+i*0.13)+Math.sin(i)*8; ctx.beginPath(); ctx.ellipse(xx,H-8,10+Math.random()*8,5+Math.random()*4,0,0,7); ctx.fill(); }
+ } else if(g==='lake'){
+ ctx.strokeStyle='#3E7A5E'; ctx.lineWidth=2;
+ for(let i=0;i<8;i++){ const xx=W*(0.06+i*0.12); ctx.beginPath(); ctx.moveTo(xx,H-4); ctx.quadraticCurveTo(xx+3,H-20,xx+2,H-34); ctx.stroke(); }
+ ctx.fillStyle='rgba(130,150,160,.6)';
+ for(let i=0;i<6;i++){ ctx.beginPath(); ctx.ellipse(W*(0.08+i*0.17),H-8,12,6,0,0,7); ctx.fill(); }
+ } else if(g==='beach'){
+ ctx.fillStyle='rgba(200,120,90,.75)';
+ for(let i=0;i<4;i++){ const xx=W*(0.1+i*0.26); ctx.beginPath(); ctx.ellipse(xx,H-16,9,6,0,0,7); ctx.fill(); }
+ ctx.strokeStyle='rgba(255,235,180,.8)'; ctx.lineWidth=2.4;
+ for(let i=0;i<5;i++){ const xx=W*(0.08+i*0.19); ctx.beginPath(); ctx.moveTo(xx,H-6); ctx.lineTo(xx+4,H-18); ctx.lineTo(xx+8,H-6); ctx.stroke(); }
+ } else {
+ ctx.fillStyle='rgba(210,230,244,.5)';
+ for(let i=0;i<5;i++){ const xx=W*(0.08+i*0.2), yy=H-26-Math.random()*12, ww=30+Math.random()*16, hh=10;
+  ctx.beginPath();
+  try{ ctx.roundRect(xx,yy,ww,hh,3); }catch(_){ ctx.rect(xx,yy,ww,hh); }
+  ctx.fill(); }
+ }
+ drawDecoFishGroup(g,t);
+ ctx.restore();
+}
+// bg fish school (under the 3d art)
+function drawDecoFishGroup(g,t){
+ if(reduceMotion) return;
+ const pal=g==='creek'||g==='stream'?[['#8FA8A5','#DCE9E6'],['#C49A6A','#EDE0C8'],['#7FA88F','#CFE0D4']]
+ :g==='beach'?[['#E8B84A','#F8EAC8'],['#4FA89C','#C8E8E2'],['#E88A6A','#F7D8CE']]
+ :g==='ice'?[['#BFD6E4','#E8F1F6'],['#8FA8C0','#D6E2EC']]
+ :[['#7FA8C8','#CFE0EC'],['#C46A5E','#F2D8CE'],['#8E9AA6','#E0E6EA']];
+ const band=cv.h-cv.waterY-110;
+ for(let s=0;s<pal.length;s++){
+ const n=3+((s*7)%3), sp=13+s*2.5, yBase=cv.waterY+26+((s*47)%Math.max(20,band-20));
+ for(let i=0;i<n;i++){
+  const span=cv.w+90;
+  const fx=((t*sp+i*73)%span)-45;
+  const dir=((Math.floor(t*sp/span)+i)%2===0)?1:-1;
+  const fy=yBase+Math.sin(t*1.6+i*2.1)*7;
+  drawDecoFish(fx,fy,6+i*1.7,pal[s][0],pal[s][1],dir===1?Math.sin(t*2.2+i)*0.12:Math.PI-Math.sin(t*2.2+i)*0.12,t,0.5);
+ }
+ }
+}
+
+// fish body drawing (parametric, faces left)
+function lumOf(hex){
+ try{ const n=parseInt(hex.slice(1),16); return ((n>>16)&255)*.3+((n>>8)&255)*.59+(n&255)*.11; }catch(e){ return 128; }
+}
+function shade(hex,k){
+ try{
+ const n=parseInt(hex.slice(1),16);
+ let r=(n>>16)&255,g=(n>>8)&255,b=n&255;
+ r=Math.max(0,Math.min(255,Math.round(r*k)));
+ g=Math.max(0,Math.min(255,Math.round(g*k)));
+ b=Math.max(0,Math.min(255,Math.round(b*k)));
+ return 'rgb('+r+','+g+','+b+')';
+ }catch(e){ return hex; }
+}
+function drawFish(f,x,y,scale,angle,t,alpha=1){
+ ctx.save(); ctx.translate(x,y); ctx.rotate(angle||0); ctx.globalAlpha=alpha;
+ const flap=Math.sin(t*11)*0.3;
+ // scale<3 means relative multiplier (icon/result), else half body length (in-game)
+ const L=scale<3?34*scale:scale;
+ const eel=f.body==='eel', flat=f.body==='flat', round=f.body==='round', torp=f.body==='torpedo';
+ const hw=L*0.44*(eel?0.5:(round?1.18:(flat?1.0:1)));
+ const tailType=(f.fin==='fancy')?'flowy':((eel||f.fin==='none')?'pointed':(flat?'roundtail':'forked'));
+ const cFin=shade(f.c1,0.82), cDark=shade(f.c1,0.7);
+ // brightness-adaptive pattern: dark fish get light spots, very light fish get dark spots
+ const lum=lumOf(f.c1);
+ const mkS=lum<120?'rgba(255,255,255,.5)':'rgba(20,35,45,.42)';
+ const mkP=lum<120?'rgba(255,255,255,.5)':'rgba(20,35,45,.4)';
+ const mkB=lum<120?'rgba(255,255,255,.45)':'rgba(20,35,45,.4)';
+ const mkR=lum>190?'rgba(180,140,60,.6)':'rgba(255,255,255,.55)';
+ const mkN=lum>190?'rgba(20,35,45,.14)':(lum<120?'rgba(255,255,255,.32)':'rgba(255,255,255,.22)');
+ // tail fin (by body/fin type)
+ ctx.fillStyle=cFin;
+ if(tailType==='forked'){
+ ctx.beginPath(); ctx.moveTo(-L*0.42,0);
+ ctx.quadraticCurveTo(-L*0.6,-hw*0.5-flap*3,-L*0.9,-hw*0.72-flap*6);
+ ctx.quadraticCurveTo(-L*0.66,-hw*0.16,-L*0.6,0);
+ ctx.quadraticCurveTo(-L*0.66,hw*0.16,-L*0.9,hw*0.72+flap*6);
+ ctx.quadraticCurveTo(-L*0.6,hw*0.5+flap*3,-L*0.42,0);
+ ctx.closePath(); ctx.fill();
+ } else if(tailType==='flowy'){
+ ctx.beginPath(); ctx.moveTo(-L*0.42,0);
+ ctx.quadraticCurveTo(-L*0.62,-hw*0.7-flap*4,-L*0.98,-hw*0.82-flap*7);
+ ctx.quadraticCurveTo(-L*0.68,-hw*0.18,-L*0.6,0);
+ ctx.quadraticCurveTo(-L*0.68,hw*0.18,-L*0.98,hw*0.82+flap*7);
+ ctx.quadraticCurveTo(-L*0.62,hw*0.7+flap*4,-L*0.42,0);
+ ctx.closePath(); ctx.fill();
+ } else if(tailType==='pointed'){
+ ctx.beginPath(); ctx.moveTo(-L*0.42,0);
+ ctx.lineTo(-L*0.96,-hw*0.55-flap*5); ctx.lineTo(-L*0.7,0);
+ ctx.lineTo(-L*0.96,hw*0.55+flap*5); ctx.closePath(); ctx.fill();
+ } else {
+ ctx.beginPath(); ctx.moveTo(-L*0.42,0);
+ ctx.quadraticCurveTo(-L*0.72,-hw*0.55,-L*0.94,0);
+ ctx.quadraticCurveTo(-L*0.72,hw*0.55,-L*0.42,0);
+ ctx.closePath(); ctx.fill();
+ }
+ // body (five silhouette types)
+ const bg=ctx.createLinearGradient(0,-hw,0,hw);
+ bg.addColorStop(0,cDark); bg.addColorStop(0.45,f.c1); bg.addColorStop(1,f.c2);
+ ctx.fillStyle=bg;
+ ctx.beginPath();
+ if(eel){
+ ctx.moveTo(L*0.5,0);
+ for(let i=0;i<=10;i++){ const u=-L*0.5+L*i/10; ctx.lineTo(u,Math.sin(u*0.5+t*3)*hw*0.5); }
+ for(let i=10;i>=0;i--){ const u=-L*0.5+L*i/10; ctx.lineTo(u,Math.sin(u*0.5+t*3+Math.PI)*hw*0.5); }
+ ctx.closePath();
+ } else if(flat){
+ ctx.ellipse(0,0,L*0.52,hw,0,0,7);
+ } else if(round){
+ ctx.ellipse(0,0,L*0.48,hw,0,0,7);
+ } else if(torp){
+ ctx.moveTo(L*0.58,0);
+ ctx.quadraticCurveTo(L*0.5,-hw*0.5,L*0.14,-hw*0.92);
+ ctx.quadraticCurveTo(-L*0.2,-hw*1.02,-L*0.42,-hw*0.5);
+ ctx.lineTo(-L*0.42,hw*0.5);
+ ctx.quadraticCurveTo(-L*0.2,hw*1.02,L*0.14,hw*0.92);
+ ctx.quadraticCurveTo(L*0.5,hw*0.5,L*0.58,0);
+ ctx.closePath();
+ } else {
+ ctx.ellipse(0,0,L*0.5,hw,0,0,7);
+ }
+ ctx.fill();
+ // back shading (darker top, dual-tone identity)
+ ctx.save(); ctx.globalAlpha=alpha*0.22;
+ ctx.fillStyle='#0B1A24';
+ ctx.beginPath(); ctx.ellipse(-L*0.06,-hw*0.35,L*0.42,hw*0.3,0,0,7); ctx.fill();
+ ctx.restore();
+ // belly highlight
+ ctx.save(); ctx.globalAlpha=alpha*0.5;
+ ctx.fillStyle='#FFFFFF';
+ ctx.beginPath(); ctx.ellipse(0,hw*0.45,L*0.3,hw*0.22,0,0,7); ctx.fill();
+ ctx.restore();
+ // dorsal fin (three forms)
+ if(f.fin==='spiky'){
+ ctx.fillStyle=cFin;
+ ctx.beginPath(); ctx.moveTo(-L*0.3,-hw);
+ for(let i=0;i<5;i++){ ctx.lineTo(-L*0.24+i*L*0.13,-hw-8-Math.sin(t*9+i)*2); }
+ ctx.lineTo(L*0.32,-hw); ctx.closePath(); ctx.fill();
+ } else if(f.fin==='fancy'){
+ ctx.fillStyle=cFin; ctx.globalAlpha=alpha*0.85;
+ ctx.beginPath(); ctx.moveTo(-L*0.32,-hw);
+ ctx.quadraticCurveTo(0,-hw-18+Math.sin(t*6)*2,L*0.36,-hw); ctx.closePath(); ctx.fill();
+ } else if(f.fin==='normal'){
+ ctx.fillStyle=cFin;
+ ctx.beginPath(); ctx.moveTo(-L*0.16,-hw); ctx.quadraticCurveTo(L*0.02,-hw-9,L*0.2,-hw); ctx.closePath(); ctx.fill();
+ }
+ // anal fin
+ ctx.fillStyle=cFin; ctx.globalAlpha=alpha*0.85;
+ ctx.beginPath(); ctx.moveTo(-L*0.3,hw*0.6); ctx.lineTo(-L*0.42,hw*1.0+flap*2); ctx.lineTo(-L*0.12,hw*0.78); ctx.closePath(); ctx.fill();
+ // pectoral fin
+ ctx.fillStyle=cFin; ctx.globalAlpha=alpha*0.9;
+ ctx.beginPath(); ctx.moveTo(-L*0.1,2); ctx.quadraticCurveTo(-L*0.22,hw*0.75,-L*0.34,hw*0.95); ctx.quadraticCurveTo(-L*0.2,hw*0.5,-L*0.1,2); ctx.closePath(); ctx.fill();
+ // gill line
+ ctx.strokeStyle='rgba(20,40,50,.35)'; ctx.lineWidth=Math.max(1,L*0.045);
+ ctx.beginPath(); ctx.moveTo(L*0.2,-hw*0.55); ctx.quadraticCurveTo(L*0.02,0,L*0.18,hw*0.6); ctx.stroke();
+ // texture (bigger & more visible)
+ if(f.pat==='stripes'){
+ ctx.strokeStyle=mkS; ctx.lineWidth=Math.max(1.2,L*0.055);
+ for(let i=0;i<4;i++){ const u=-L*0.26+i*L*0.17;
+  ctx.beginPath(); ctx.moveTo(u,-hw);
+  ctx.quadraticCurveTo(u+L*0.06,-hw*0.25,u,hw); ctx.stroke(); }
+ } else if(f.pat==='spots'){
+ ctx.fillStyle=mkP;
+ for(let i=0;i<6;i++){ const sx=-L*0.24+i*L*0.115, sy=(i%2?1:-1)*hw*0.38-(i%3===0?hw*0.12:0);
+  ctx.beginPath(); ctx.arc(sx,sy,Math.max(1.8,L*0.085),0,7); ctx.fill(); }
+ } else if(f.pat==='retic'){
+ ctx.strokeStyle=mkR; ctx.lineWidth=Math.max(1,L*0.035);
+ for(let i=0;i<4;i++){ ctx.beginPath(); ctx.arc(L*0.05,-hw*0.25,L*0.5+i*L*0.12,Math.PI*0.2,Math.PI*0.8); ctx.stroke(); }
+ } else if(f.pat==='bars'){
+ ctx.strokeStyle=mkB; ctx.lineWidth=Math.max(1.2,L*0.05);
+ for(let i=0;i<5;i++){ ctx.beginPath(); ctx.moveTo(-L*0.3+i*L*0.13,-hw*0.85); ctx.lineTo(-L*0.3+i*L*0.13,hw*0.85); ctx.stroke(); }
+ } else if(f.pat==='line'){
+ // single lateral line (White Slender Bream etc.)
+ ctx.strokeStyle=mkS; ctx.lineWidth=Math.max(1.2,L*0.05);
+ ctx.beginPath(); ctx.moveTo(-L*0.42,-hw*0.06); ctx.quadraticCurveTo(0,hw*0.14,L*0.52,-hw*0.06); ctx.stroke();
+ } else {
+ // scale pattern
+ ctx.strokeStyle=mkN; ctx.lineWidth=1;
+ for(let i=0;i<3;i++){
+  ctx.beginPath(); ctx.arc(-L*0.16+i*L*0.17,-hw*0.12,L*0.11,Math.PI*0.15,Math.PI*0.85); ctx.stroke();
+  ctx.beginPath(); ctx.arc(-L*0.1+i*L*0.17,hw*0.16,L*0.11,Math.PI*1.15,Math.PI*1.85); ctx.stroke();
+ }
+ }
+ // mouth
+ ctx.strokeStyle='rgba(20,30,35,.6)'; ctx.lineWidth=Math.max(1,L*0.04);
+ ctx.beginPath(); ctx.moveTo(L*0.46,-hw*0.1); ctx.lineTo(L*0.56,hw*0.02); ctx.stroke();
+ // eye (three layers: white/pupil/glint, scaled with body size)
+ ctx.fillStyle='#fff';
+ ctx.beginPath(); ctx.arc(L*0.33,-hw*0.16,Math.max(2.2,L*0.1),0,7); ctx.fill();
+ ctx.fillStyle='#26323A';
+ ctx.beginPath(); ctx.arc(L*0.34,-hw*0.17,Math.max(1.4,L*0.06),0,7); ctx.fill();
+ ctx.fillStyle='#fff';
+ ctx.beginPath(); ctx.arc(L*0.36,-hw*0.2,Math.max(0.8,L*0.024),0,7); ctx.fill();
+ // special trait (bigger)
+ if(f.sp==='whiskers'){
+ ctx.strokeStyle='rgba(25,35,40,.75)'; ctx.lineWidth=Math.max(1,L*0.045);
+ ctx.beginPath(); ctx.moveTo(L*0.3,0); ctx.lineTo(L*0.46,-4);
+ ctx.moveTo(L*0.3,0); ctx.lineTo(L*0.48,2);
+ ctx.moveTo(L*0.26,hw*0.18); ctx.lineTo(L*0.4,hw*0.36);
+ ctx.moveTo(L*0.26,-hw*0.18); ctx.lineTo(L*0.4,-hw*0.36); ctx.stroke();
+ }
+ if(f.sp==='antenna'){
+ ctx.strokeStyle=cFin; ctx.lineWidth=Math.max(1.2,L*0.045);
+ ctx.beginPath(); ctx.moveTo(L*0.2,-hw); ctx.lineTo(L*0.34,-hw-11); ctx.stroke();
+ ctx.fillStyle='rgba(255,220,120,.95)'; ctx.beginPath(); ctx.arc(L*0.36,-hw-11,Math.max(2.4,L*0.06),0,7); ctx.fill();
+ }
+ if(f.sp==='teeth'){
+ ctx.fillStyle='#F5F5EC';
+ ctx.beginPath(); ctx.moveTo(L*0.4,1); ctx.lineTo(L*0.48,5); ctx.lineTo(L*0.43,6); ctx.lineTo(L*0.38,3);
+ ctx.moveTo(L*0.46,3); ctx.lineTo(L*0.55,7); ctx.lineTo(L*0.5,8); ctx.lineTo(L*0.44,5); ctx.closePath(); ctx.fill();
+ }
+ ctx.restore();
+}
+
+// bait / line / float
+function drawRod(g,t){
+ const W=cv.w, H=cv.h;
+ const butt={x:W*0.045, y:H*0.82};   // rod butt: lower-left
+ const swing=(VIS.phase==='casting')?((VIS.castSwing||0)*78):0; // lift amount while swinging
+ const ctrlY=H*0.30-swing*0.55;
+ const tipY=H*0.15+VIS.rodBend-swing;
+ const tip={x:W*0.64, y:tipY};    // rod tip: upper-right-center (rises/falls with swing)
+ // level colors: bamboo → fiberglass → carbon → titanium → legendary
+ const st=S.rod===5?'#C9A24B':S.rod===4?'#AEB8C0':S.rod===3?'#2A3238':S.rod===2?'#8FA8B8':'#7A5230';
+ const hi=S.rod===5?'#F2DFAE':S.rod===4?'#EAF2F8':S.rod===3?'#5A6A74':S.rod===2?'#C6DAE6':'#A98B60';
+ const tipCol=S.rod===5?'#E8C96A':S.rod===4?'#C9D8E4':S.rod===3?'#7F4E9E':S.rod===2?'#4E9EB0':'#E8806A';
+ const qpt=(tt)=>{const a=1-tt;return {x:a*a*butt.x+2*a*tt*W*0.36+tt*tt*tip.x, y:a*a*butt.y+2*a*tt*ctrlY+tt*tt*tip.y};};
+ ctx.save();
+ ctx.lineCap='round';
+ // rod body: carbon dual-tone gradient + highlight strip
+ const grd=ctx.createLinearGradient(butt.x,butt.y,tip.x,tip.y);
+ grd.addColorStop(0,st); grd.addColorStop(0.5,hi); grd.addColorStop(0.85,st); grd.addColorStop(1,hi);
+ ctx.strokeStyle=grd; ctx.lineWidth=S.rod>=4?5:6;
+ ctx.beginPath(); ctx.moveTo(butt.x,butt.y); ctx.quadraticCurveTo(W*0.36,ctrlY,tip.x,tip.y); ctx.stroke();
+ // highlight line (rod spine)
+ ctx.strokeStyle='rgba(255,255,255,.28)'; ctx.lineWidth=1.2;
+ ctx.beginPath(); ctx.moveTo(butt.x,butt.y-3); ctx.quadraticCurveTo(W*0.36,ctrlY-3,tip.x,tip.y-3); ctx.stroke();
+ // guides (gold metal rings, 4 along rod)
+ ctx.strokeStyle='#E8C96A'; ctx.lineWidth=2;
+ for(let i=1;i<=4;i++){
+ const pt=qpt(i*0.2+0.1);
+ ctx.beginPath(); ctx.ellipse(pt.x,pt.y,2.8,1.5,Math.atan2(tip.y-butt.y,tip.x-butt.x),0,7); ctx.stroke();
+ }
+ // grip: dark wrapped pattern
+ ctx.strokeStyle='#3E3226'; ctx.lineWidth=7.5;
+ ctx.beginPath(); ctx.moveTo(butt.x+1,butt.y-1); ctx.quadraticCurveTo(W*0.21,H*0.70,W*0.26,H*0.545); ctx.stroke();
+ ctx.strokeStyle='rgba(255,255,255,.16)'; ctx.lineWidth=1;
+ ctx.beginPath(); ctx.moveTo(butt.x+3,butt.y-3); ctx.quadraticCurveTo(W*0.21,H*0.70-3,W*0.26,H*0.545-3); ctx.stroke();
+ // rod tip: thin gradient + colored tip
+ const tipIn={x:tip.x-W*0.17, y:qpt(0.78).y};
+ ctx.strokeStyle='#D8C9A8'; ctx.lineWidth=2;
+ ctx.beginPath(); ctx.moveTo(tipIn.x,tipIn.y);
+ ctx.quadraticCurveTo(tip.x-W*0.085,tip.y+VIS.rodBend*0.7+6,tip.x,tip.y); ctx.stroke();
+ ctx.strokeStyle=tipCol; ctx.lineWidth=2.6;
+ ctx.beginPath(); ctx.moveTo(tip.x-W*0.045,tip.y+VIS.rodBend*0.2);
+ ctx.quadraticCurveTo(tip.x-W*0.02,tip.y+VIS.rodBend*0.5+3,tip.x,tip.y); ctx.stroke();
+ // line: from tip into water (swing arc while casting)
+ const fx=(VIS.phase==='casting'&&VIS.castFlyX)?VIS.castFlyX:W*0.5;
+ const fy=VIS.floatY;
+ const sway=VIS.phase==='casting'?Math.sin(VIS.castP*Math.PI*2)*16*(1-VIS.castP):0;
+ ctx.strokeStyle='rgba(245,250,250,.85)'; ctx.lineWidth=1.3;
+ ctx.beginPath(); ctx.moveTo(tip.x,tip.y);
+ ctx.quadraticCurveTo(tip.x-10+sway,(tip.y+fy)*0.5,fx,fy);
+ ctx.stroke();
+ ctx.restore();
+}
+function drawFloat(g,t){
+ const W=cv.w, wy=cv.waterY;
+ let fx=W*0.5, fy=wy+16, dive=0;
+ if(VIS.phase==='casting'){
+ // float flies from tip along a parabola
+ const p=VIS.castP, tpx=W*0.64, tpy=cv.h*0.15+VIS.rodBend-(VIS.castSwing||0)*78, lx=W*0.5, ly=wy+18;
+ fx=tpx+(lx-tpx)*p;
+ fy=tpy-Math.sin(p*Math.PI)*((tpy-ly)*1.12);
+ VIS.castFlyX=fx; VIS.castFlyY=fy;
+ }
+ else if(VIS.phase==='waiting'||VIS.phase==='bite'){
+ const bob=reduceMotion?0:Math.sin(t*2.4)*2.2;
+ fy=wy+16+bob-VIS.floatDive*9;
+ } else if(VIS.phase==='hooked'||VIS.phase==='landed'){
+ fy=wy+22+Math.sin(t*7)*3;
+ }
+ VIS.floatY=fy;
+ ctx.save();
+ // splash at cast landing point
+ if(VIS.castSplash>0){
+ const a=VIS.castSplash, lx=W*0.5, ly=wy+18;
+ ctx.globalAlpha=Math.min(1,a)*0.85;
+ ctx.strokeStyle='#EAF6F8'; ctx.lineWidth=2;
+ ctx.beginPath(); ctx.ellipse(lx,ly+2,(1-a)*44+6,(1-a)*13+2,0,0,7); ctx.stroke();
+ ctx.fillStyle='#EAF6F8';
+ for(let i=0;i<7;i++){
+  const ang=-1.6+i*0.55;
+  const rr=(1-a)*(30+((i*37)%14));
+  ctx.beginPath(); ctx.arc(lx+Math.cos(ang)*rr, ly+Math.sin(ang)*rr*0.9, 1.9*(1-a)+0.5,0,7); ctx.fill();
+ }
+ ctx.globalAlpha=1;
+ }
+ // splash ring
+ ctx.strokeStyle='rgba(235,246,248,.5)'; ctx.lineWidth=1.4;
+ ctx.beginPath(); ctx.ellipse(fx,fy+4,7+Math.sin(t*3)*1.5,2.4,0,0,7); ctx.stroke();
+ // float (red-white + top stem + waterline)
+ ctx.fillStyle='#3A464E'; ctx.lineWidth=1.3; ctx.lineCap='round';
+ ctx.beginPath(); ctx.moveTo(fx,fy-13); ctx.lineTo(fx,fy-10); ctx.stroke();
+ ctx.fillStyle='#F2F2EA';
+ ctx.beginPath(); ctx.moveTo(fx-1.5,fy-13); ctx.lineTo(fx+1.5,fy-13); ctx.lineTo(fx+3,fy-9.5); ctx.lineTo(fx-3,fy-9.5); ctx.closePath(); ctx.fill();
+ ctx.fillStyle='#D9482E';
+ ctx.beginPath(); ctx.moveTo(fx-3,fy-9.5); ctx.lineTo(fx+3,fy-9.5); ctx.lineTo(fx+3.8,fy-1); ctx.lineTo(fx-3.8,fy-1); ctx.closePath(); ctx.fill();
+ ctx.fillStyle='#F2F2EA';
+ ctx.beginPath(); ctx.ellipse(fx,fy,3.8,2.4,0,0,7); ctx.fill();
+ ctx.fillStyle='#D9482E';
+ ctx.beginPath(); ctx.moveTo(fx-1.6,fy+2.4); ctx.lineTo(fx+1.6,fy+2.4); ctx.lineTo(fx+2,fy+7); ctx.lineTo(fx-2,fy+7); ctx.closePath(); ctx.fill();
+ ctx.fillStyle='#F2F2EA'; ctx.beginPath(); ctx.arc(fx,fy-9,1.4,0,7); ctx.fill();
+ ctx.restore();
+}
+function drawHookFish(g,t){
+ if(!VIS.fish) return;
+ const W=cv.w, wy=cv.waterY, H=cv.h;
+ const d=VIS.dist/100;
+ const y=wy+44+d*(H-wy-90);
+ VIS.fishX=W*0.5+Math.sin(t*6+VIS.wobble)*6; VIS.fishY=y;
+ // struggle splashes
+ if(!reduceMotion){
+ ctx.save(); ctx.globalAlpha=0.5;
+ ctx.fillStyle='#EAF6F8';
+ for(let i=0;i<3;i++){
+  const bx=VIS.fishX-16+i*14, by=y-6-Math.abs(Math.sin(t*5+i))*8;
+  ctx.beginPath(); ctx.arc(bx,by,2.2,0,7); ctx.fill();
+ }
+ ctx.restore();
+ }
+ const size=13+Math.min(26,VIS.fish.max*1.1);
+ const struggle=VIS.struggling?0.12:0.04;
+ drawFish(VIS.fish,VIS.fishX,y,size,t*2,Math.sin(t*8)*struggle);
+ // tired stars
+ if(VIS.tired){
+ ctx.save(); ctx.strokeStyle='rgba(255,235,150,.9)'; ctx.lineWidth=1.4;
+ ctx.beginPath(); ctx.moveTo(VIS.fishX+14,y-14); ctx.lineTo(VIS.fishX+16,y-17); ctx.moveTo(VIS.fishX+16,y-14); ctx.lineTo(VIS.fishX+14,y-17); ctx.stroke();
+ ctx.restore();
+ }
+}
+
+// splash fish + aquarium icons + thumbnails
+function genSplashFish(){
+ const c=document.getElementById('splashFishCv');
+ const c2=c.getContext('2d'); c2.clearRect(0,0,300,120);
+ const f=FISH.find(x=>x.id==='jl')||FISH[0];
+ // simplified: draw a golden Common Carp directly
+ const tmp=document.createElement('canvas'); tmp.width=300; tmp.height=120;
+ const tx=tmp.getContext('2d');
+ const save=ctx; ctx=tx;
+ drawFish(f,150,60,1.5,Math.PI*0.03,performance.now()/1000);
+ ctx=save;
+ c2.drawImage(tmp,0,0);
+ c2.globalAlpha=0.16; c2.fillStyle='#fff';
+ c2.beginPath(); c2.ellipse(150,74,90,6,0,0,7); c2.fill();
+ c2.globalAlpha=1;
+}
+function genFishIcons(){
+ for(const f of FISH){
+ const cn=document.createElement('canvas'); cn.width=88; cn.height=56;
+ const c=cn.getContext('2d');
+ const save=ctx; ctx=c;
+ drawFish(f,44,28,1,0,1.4);
+ ctx=save;
+ f.icon=cn.toDataURL();
+ }
+}
+function drawThumb(cn,g){
+ cn.width=128; cn.height=128;
+ const c=cn.getContext('2d');
+ const sc=SCENES[g];
+ const save=ctx; ctx=c;
+ c.fillStyle=sc.sky[0]; c.fillRect(0,0,128,128*0.55);
+ drawDecoMini(g);
+ c.fillStyle=sc.bank; c.fillRect(0,70,128,10);
+ const wg=c.createLinearGradient(0,80,0,128);
+ wg.addColorStop(0,sc.water[0]); wg.addColorStop(1,sc.waterU);
+ c.fillStyle=wg; c.fillRect(0,80,128,48);
+ ctx=save;
+}
+function drawDecoMini(g){
+ const c=ctx, W=128, wy=128*0.55;
+ if(g==='creek'){
+ c.fillStyle='#3F6B47';
+ c.beginPath(); c.moveTo(10,wy); c.lineTo(18,wy*0.3); c.lineTo(26,wy); c.closePath(); c.fill();
+ c.fillStyle='#F5EFE2'; c.fillRect(60,wy-24,26,24);
+ c.fillStyle='#3B4A52'; c.beginPath(); c.moveTo(58,wy-24); c.lineTo(73,wy-36); c.lineTo(88,wy-24); c.closePath(); c.fill();
+ } else if(g==='lake'){
+ c.fillStyle='#4A6E7C'; c.fillRect(30,wy-30,16,30); c.fillRect(56,wy-20,12,20); c.fillRect(76,wy-26,14,26);
+ c.fillStyle='#E8F0F4';
+ for(let i=0;i<3;i++){ c.fillRect(34+i*18,wy-26+i*6,4,3); }
+ } else if(g==='stream'){
+ c.fillStyle='#3F6B47';
+ c.beginPath(); c.moveTo(0,wy); c.lineTo(30,wy*0.35); c.lineTo(60,wy); c.closePath(); c.fill();
+ c.beginPath(); c.moveTo(60,wy); c.lineTo(90,wy*0.4); c.lineTo(128,wy); c.closePath(); c.fill();
+ } else if(g==='beach'){
+ c.fillStyle='#F8D98A'; c.beginPath(); c.arc(100,26,10,0,7); c.fill();
+ c.strokeStyle='#7A5230'; c.lineWidth=3;
+ c.beginPath(); c.moveTo(20,wy); c.quadraticCurveTo(24,wy*0.5,28,wy*0.25); c.stroke();
+ } else {
+ c.fillStyle='#CFE0EC';
+ c.beginPath(); c.moveTo(0,wy); c.lineTo(34,wy*0.3); c.lineTo(70,wy); c.closePath(); c.fill();
+ c.beginPath(); c.moveTo(70,wy); c.lineTo(100,wy*0.36); c.lineTo(128,wy); c.closePath(); c.fill();
+ c.fillStyle='#fff'; c.beginPath(); c.moveTo(34,wy*0.3); c.lineTo(30,wy*0.38); c.lineTo(38,wy*0.35); c.closePath(); c.fill();
+ }
+}
+
+// fishing state machine
+const FS={
+ phase:'idle',   // idle | casting | waiting | bite | hooked | landed | weigh
+ fish:null, weight:0,
+ biteDelay:0, twitchAt:0, twitches:0, twitchCount:0,
+ diveT:0, diveDur:0, castT:0, cooldown:0, cdT:0,
+ dist:100, tension:0, stamina:100,
+ reeling:false, struggling:false, tired:false,
+ struggleT:0, warnT:0, spooked:false, hudT:0, contestHudT:0,
+ contest:null,   // {g, t, startCoins, catchN, best}
+ rewards:null
+};
+const BITE_BASE={C:[3.5,7],U:[4,8.5],R:[5,10],EP:[6.5,12],L:[8,14]};
+const DIVE_DUR={C:1.3,U:1.1,R:0.85,EP:0.62,L:0.45};
+const TWITCH_N={C:2,U:2,R:3,EP:3,L:4};
+const RAR_XP={C:0,U:8,R:20,EP:45,L:90};
+
+function startCast(){
+ if(FS.phase!=='idle') return;
+ const inst=rodInst();
+ if(inst&&inst.dur<=0){ toast('Rod broken, repair at the shop','red'); return; }
+ const staminaCost=Math.max(1,Math.round(8*(0.85**(S.relics.attack||0))));
+ if(S.stamina<staminaCost){
+ if(S.staminaPack>0){ S.staminaPack--; addStamina(100); toast('Ration used, stamina full','gold'); return; }
+ toast('Out of stamina, wait or drink a potion','red'); return;
+ }
+ S.stamina-=staminaCost;
+ if(baitNow().fee>0 && S.coins<baitNow().fee){
+ toast('Not enough coins for bait, catch some fish first','red'); return;
+ }
+ if(baitNow().fee>0) addCoins(-baitNow().fee);
+ S.stats.casts++;
+ FS.phase='casting'; FS.castT=1.0; FS.fish=null;
+ VIS.phase='casting'; VIS.castP=0; VIS.castSplash=0; VIS.lineLen=0.15; VIS.rodBend=0; VIS.castSwing=0;
+ SFX.splash();
+ renderHud(); renderBtn();
+}
+function beginWaiting(){
+ FS.fish=rollFish(S.ground);
+ const base=BITE_BASE[FS.fish.r];
+ FS.biteDelay=(base[0]+Math.random()*(base[1]-base[0]))*baitNow().bite*(0.9**(S.relics.water_wood||0));
+ FS.twitchAt=Math.max(0.5,FS.biteDelay-1.15);
+ FS.twitchCount=TWITCH_N[FS.fish.r];
+ FS.twitches=0; FS.diveT=0; FS.spooked=false;
+ FS.phase='waiting'; VIS.phase='waiting';
+ VIS.fish=FS.fish;
+ renderBtn();
+}
+function doTwitch(){
+ FS.twitches++;
+ VIS.floatDive=-1; // pushed up
+ SFX.twitch();
+ setTimeout(()=>{ if(FS.phase==='waiting') VIS.floatDive=0; },140);
+}
+function beginDive(){
+ if(!FS.fish){ escapeFish('late'); return; } // guard: never stuck waiting in abnormal state
+ FS.phase='bite'; VIS.phase='bite';
+ FS.diveT=0; FS.diveDur=DIVE_DUR[FS.fish.r]*(0.85+Math.random()*0.3);
+ VIS.floatDive=1;
+ SFX.bite();
+ renderBtn();
+}
+function hookFish(){
+ if(!FS.fish){ // guard: no fish data -> no standoff, safe return to idle
+ FS.phase='idle'; FS.cooldown=0; FS.reeling=false;
+ VIS.phase='idle'; VIS.fish=null; VIS.lineLen=1; VIS.rodBend=0;
+ renderHud(); renderBtn(); return;
+ }
+ FS.phase='hooked'; VIS.phase='hooked';
+ FS.dist=100; FS.tension=10; FS.stamina=100; FS.tired=false; FS.struggling=false;
+ FS.struggleT=0.6+Math.random()*0.8;
+ VIS.dist=100; VIS.lineLen=0.18; VIS.rodBend=26;
+ VIS.fishX=cv.w*0.5; VIS.wobble=0;
+ if(FS.fish.r==='L'){ toast('A legendary fish is fighting!','gold'); SFX.levelup(); }
+ else if(FS.fish.r==='EP'){ toast('An epic fish is fighting!','gold'); }
+ SFX.hook();
+ renderHud(); renderBtn();
+}
+function escapeFish(reason){
+ SFX.escape();
+ if(reason==='early'){ toast('Too early! The fish is spooked!'); damageRod(1); }
+ else { toast('Fish escaped... be quicker next time'); damageRod(2); }
+ FS.phase='idle'; FS.cooldown=(reason==='early'?2.6:1.6)*(0.85**(S.relics.swift||0));
+ VIS.phase='idle'; VIS.fish=null; VIS.lineLen=1; VIS.rodBend=0;
+ renderHud(); renderBtn();
+}
+function breakLine(){
+ SFX.fail();
+ toast('Line snapped! The big one got away','red');
+ damageRod(6);
+ FS.phase='idle'; FS.cooldown=1.8*(0.85**(S.relics.swift||0));
+ VIS.phase='idle'; VIS.fish=null; VIS.lineLen=1; VIS.rodBend=0;
+ renderHud(); renderBtn();
+}
+function landFish(){
+ const f=FS.fish, w=fishWeight(f); FS.weight=w;
+ FS.phase='landed'; VIS.phase='landed';
+ if(!reduceMotion){ const stg=document.getElementById('stage'); if(stg){ stg.classList.remove('shake'); void stg.offsetWidth; stg.classList.add('shake'); } }
+ VIS.jumpT=0; VIS.splash=0; FS.jumpT=0;
+ SFX.catchF();
+ // compute reward (not banked yet; weigh page chooses "Sell" or "Release")
+ const isFirst=!S.aquarium[f.id];
+ let coins=Math.round(w*RAR_PRICE[f.r]) + (isFirst?30:0);
+ if(FS.contest) coins=Math.round(coins*1.5);
+ coins=Math.round(coins*(1+0.1*(S.relics.final_dmg||0)));
+ const xp=Math.round(w*4)+RAR_XP[f.r];
+ const spiritVal=(!isFirst&&(f.r==='R'||f.r==='EP'||f.r==='L'))?RAR_SPIRIT[f.r]:0;
+ const scGain=Math.round(RAR_SCORE[f.r]*(1+Math.min(5,w/10)));
+ S.stats.caught++;
+ if(f.r==='R'||f.r==='EP'||f.r==='L') S.stats.rare++;
+ if(w>S.stats.bestW){ S.stats.bestW=w; S.stats.bestName=f.name; }
+ if(FS.contest){ FS.contest.catchN++; FS.contest.best=Math.max(FS.contest.best||0,w); }
+ S.score+=scGain;
+ FS.rewards={f,w,coins,xp,isFirst,spiritVal,scGain};
+ save();
+ checkAchievements();
+ renderAquarium(); renderGroundsList(); renderShop();
+ setTimeout(()=>{ if(FS.phase==='landed'){ FS.phase='weigh'; showWeigh(FS.rewards); } },1300);
+}
+// sell: coins+xp, first catch goes to codex
+function sellFish(){
+ const r=FS.rewards; if(!r) return;
+ const isFirst=addFishToAq(r.f,r.w);
+ addCoins(r.coins); addXp(r.xp);
+ S.stats.earned+=Math.round(r.coins);
+ if(r.scGain>0){ /* score counted in landFish */ }
+ hideOverlay('overlayWeigh');
+ FS.rewards=null;
+ FS.phase='idle'; VIS.phase='idle'; VIS.fish=null; VIS.jumpT=-1;
+ save(); renderTop(); renderHud(); renderBtn();
+}
+// release for spirit (R+, not first catch)
+function releaseFish(){
+ const r=FS.rewards; if(!r||r.spiritVal<=0) return;
+ addSpirit(r.spiritVal);
+ toast('Released '+r.f.name+', gained '+r.spiritVal+' Spirit','gold');
+ hideOverlay('overlayWeigh');
+ FS.rewards=null;
+ FS.phase='idle'; VIS.phase='idle'; VIS.fish=null; VIS.jumpT=-1;
+ save(); renderTop(); renderHud(); renderBtn();
+}
+function afterWeigh(){
+ if(FS.rewards&&!FS.rewards.settled) sellFish();
+ else { hideOverlay('overlayWeigh'); FS.rewards=null; }
+}
+function anyOverlay(){
+ return !!document.querySelector('.panel.open')||!!document.querySelector('.overlay.show');
+}
+function tickFishing(dt){
+ const rod=rodNow();
+ if(anyOverlay()) return;
+ // online stamina: +2 every 20s
+ if(S.stamina<100){
+ S.staminaT-=dt;
+ if(S.staminaT<=0){ S.stamina=Math.min(100,S.stamina+2); S.staminaT=20; renderHud(); }
+ }
+ // cooldown ticks globally in every state (fixes cast freeze when cooldown never decreases after scare/escape/snap)
+ if(FS.cooldown>0){
+ FS.cooldown=Math.max(0,FS.cooldown-dt);
+ if(FS.phase==='idle'){ FS.cdT-=dt; if(FS.cdT<=0){ FS.cdT=0.2; renderBtn(); } }
+ }
+ if(VIS.castSplash>0) VIS.castSplash=Math.max(0,VIS.castSplash-dt*1.6); // splash decay
+ if(FS.phase==='casting'){
+ FS.castT-=dt;
+ VIS.castP=Math.min(1,1-FS.castT);
+ const p=VIS.castP;
+ // real cast in 3 beats: 0~0.42 rear-load (tip up) -> 0.42~0.8 forward whip (tip bent, line out) -> 0.8~1 reset
+ if(p<0.42){ VIS.castSwing=p/0.42; VIS.rodBend=VIS.castSwing*4; }
+ else if(p<0.8){ VIS.castSwing=1-(p-0.42)/0.38; VIS.rodBend=(1-VIS.castSwing)*17; }
+ else { VIS.castSwing=0; VIS.rodBend=0; }
+ // line unspools from the tip
+ VIS.lineLen=0.15+Math.max(0,Math.min(1,(p-0.3)/0.45))*0.9;
+ if(FS.castT<=0){ VIS.rodBend=0; VIS.castSwing=0; VIS.castSplash=1; VIS.floatDive=1.4; SFX.splash(); beginWaiting(); }
+ }
+ else if(FS.phase==='waiting'){
+ VIS.lineLen+=(1-VIS.lineLen)*dt*3;
+ VIS.rodBend+=(0-VIS.rodBend)*dt*5;
+ if(VIS.floatDive>0) VIS.floatDive=Math.max(0,VIS.floatDive-dt*2.4); // float sinks then slowly stands up
+ FS.biteDelay-=dt;
+ if(FS.biteDelay<=FS.twitchAt && FS.twitches<FS.twitchCount){
+  const gap=0.4+Math.random()*0.4;
+  FS.twitchAt=FS.biteDelay-gap;
+  doTwitch();
+ }
+ if(FS.biteDelay<=0){ beginDive(); }
+ }
+ else if(FS.phase==='bite'){
+ FS.diveT+=dt;
+ if(FS.diveT>=FS.diveDur){ escapeFish('late'); }
+ }
+ else if(FS.phase==='hooked'){
+ // distance baseline: fish runs away if you do not reel (rarity-scaled fight)
+ const fgt=FIGHT[FS.fish.r]||1;
+ let bleed=(1.5+FS.fish.d*4)*fgt;
+ FS.dist=Math.min(100, FS.dist+bleed*dt);
+ if(FS.reeling){
+  const sp=rod.speed*30;
+  FS.dist=Math.max(0, FS.dist-sp*dt);
+  FS.tension=Math.min(rod.cap+30, FS.tension+(8+3*fgt)*dt);
+  FS.stamina=Math.max(0, FS.stamina-13*dt);
+  VIS.wobble+=dt*8;
+  if(!reduceMotion && Math.random()<dt*18) SFX.reel();
+  if(FS.stamina<=0 && !FS.tired){ FS.tired=true; toast('Fish is tired! Reel it in','gold'); }
+ } else {
+  FS.tension=Math.max(0, FS.tension-22*dt);
+  FS.stamina=Math.min(100, FS.stamina+8*dt);
+  if(FS.tired && FS.stamina>=26){ FS.tired=false; toast('Fish recovered, watch out!','red'); }
+ }
+ // struggle event (rarer fish struggle harder & more often)
+ FS.struggleT-=dt;
+ if(FS.struggleT<=0){
+  FS.struggleT=(1.5-0.18*(FIGHT_IDX[FS.fish.r]||0))+Math.random()*0.8;
+  if(!FS.tired){
+  FS.struggling=true;
+  FS.dist=Math.min(100, FS.dist+(3+FS.fish.d*8)*fgt);
+  FS.tension=Math.min(rod.cap+30, FS.tension+(5+FS.fish.d*9)*fgt);
+  SFX.splash();
+  setTimeout(()=>{ FS.struggling=false; },340);
+  }
+ } else { FS.struggling=false; }
+ VIS.dist=FS.dist; VIS.struggling=FS.struggling; VIS.tired=FS.tired;
+ VIS.lineLen+=(0.18-VIS.lineLen)*dt*4;
+ VIS.rodBend+=(14-VIS.rodBend)*dt*4;
+ // tension warning + red vignette
+ if(FS.tension>rod.cap*0.78){
+  FS.warnT-=dt;
+  if(FS.warnT<=0){ FS.warnT=1.6; SFX.warn(); }
+  VIS.danger=Math.min(1,VIS.danger+dt*3.2);
+ } else { VIS.danger=Math.max(0,VIS.danger-dt*4); }
+ const dg=document.getElementById('dangerVig');
+ if(dg) dg.style.opacity=VIS.danger;
+ if(FS.tension>=rod.cap){ breakLine(); return; }
+ if(FS.dist<=0){ landFish(); return; }
+ FS.hudT-=dt; if(FS.hudT<=0){ FS.hudT=0.1; renderHud(); } // 10Hz throttle, avoid per-frame DOM writes
+ }
+ else if(FS.phase==='landed'){
+ VIS.jumpT+=dt;
+ }
+}
+// reel input
+function setReeling(v){
+ if(FS.phase!=='hooked') return;
+ FS.reeling=v;
+}
+function tapAction(){
+ try{
+ acInit();
+ if(FS.phase==='idle'){
+  if(FS.cooldown>0) return;
+  startCast();
+ } else if(FS.phase==='waiting'){
+  // mis-taps before the bite: scare the fish
+  if(FS.biteDelay<FS.twitchAt){ escapeFish('early'); }
+  else if(FS.twitches>0){ escapeFish('early'); }
+ } else if(FS.phase==='bite'){
+  hookFish();
+ } else if(FS.phase==='landed'||FS.phase==='weigh'){
+  // ignored, wait for weigh buttons
+ }
+ }catch(e){
+ try{ window.__DBG_ERR.push({t:Date.now(),m:'tap:'+((e&&e.message)||e),f:'',l:0}); }catch(_){}
+ }
+}
+// contest
+function startContest(g){
+ if(FS.contest) return;
+ if(!groundUnlocked(g)){ toast('Level too low for this ground'); return; }
+ if(S.ground!==g) S.ground=g;
+ FS.contest={g,t:60,catchN:0,best:0};
+ renderTop(); renderGroundsList();
+ document.getElementById('contestBar').classList.add('show');
+ updateContestBar();
+ toast('Fishing Contest starts! 60s of 2x rewards','gold');
+ SFX.levelup();
+}
+function tickContest(dt){
+ if(!FS.contest) return;
+ FS.contest.t-=dt;
+ FS.contestHudT-=dt;
+ if(FS.contestHudT<=0){ FS.contestHudT=0.1; updateContestBar(); } // 10Hz throttle
+ if(FS.contest.t<=0){
+ const c=FS.contest;
+ const bonus=Math.round(c.catchN*15);
+ addCoins(bonus);
+ const prev=S.contest.best[c.g]||0;
+ S.contest.best[c.g]=Math.max(prev,c.best);
+ FS.contest=null;
+ document.getElementById('contestBar').classList.remove('show');
+ save();
+ showModal(`<h3>Contest over!</h3><p>Caught: <b>${c.catchN}</b> fish, best <b>${c.best}kg</b></p>
+  <div class="offlineNum">+${bonus} Coins</div><p class="offlineSub">Contest rewards granted</p>
+  <button class="btnBig" onclick="closeModal();renderTop();">Great, done</button>`);
+ SFX.catchF();
+ }
+}
+function updateContestBar(){
+ const el=document.getElementById('contestTime');
+ if(el&&FS.contest){ el.textContent=Math.max(0,Math.ceil(FS.contest.t)); }
+}
+
+// ui render
+const $=id=>document.getElementById(id);
+function fmt(n){ return Math.floor(n).toLocaleString('en-US'); }
+function toast(msg,cls){
+ const w=$('toastWrap');
+ const d=document.createElement('div'); d.className='toast'+(cls?' '+cls:''); d.textContent=msg;
+ while(w.children.length>=3) w.removeChild(w.firstChild);
+ w.appendChild(d);
+ setTimeout(()=>{ d.style.transition='opacity .3s'; d.style.opacity=0; setTimeout(()=>d.remove(),320); },2200);
+}
+function renderTop(){
+ $('groundName').textContent=groundOf(S.ground).name;
+ $('rankName').textContent=rankName(S.level);
+ $('rankLv').textContent='Lv.'+S.level;
+ $('coinNum').textContent=fmt(S.coins);
+ const xf=$('xpFill'); if(xf) xf.style.width=Math.min(100,(S.xp/xpToNext(S.level)*100)).toFixed(1)+'%';
+ renderBtn();
+}
+function renderHud(){
+ const rod=rodNow();
+ const tx=Math.max(0,Math.min(100,FS.tension/rod.cap*100));
+ const sEl=$('barSta'); if(sEl){ sEl.style.width=S.stamina+'%'; $('staNum').textContent=Math.round(S.stamina)+'/100'; }
+ $('barTension').style.width=tx+'%';
+ $('tensionNum').textContent=Math.round(FS.tension)+'/'+rod.cap;
+ $('barTension').classList.toggle('warn', FS.phase==='hooked'&&FS.tension>rod.cap*0.78);
+ $('barDist').style.width=(100-FS.dist)+'%';
+ $('distNum').textContent=Math.round(100-FS.dist)+'%';
+ const fishRow=$('fishBarRow');
+ if(FS.phase==='hooked'){
+ fishRow.style.display='flex';
+ $('fishBarName').textContent=FS.fish?FS.fish.name:'Fish';
+ $('barStamina').style.width=FS.stamina+'%';
+ $('staminaNum').textContent=Math.round(FS.stamina)+'%';
+ } else { fishRow.style.display='none'; }
+}
+const BTN_LABEL={idle:'Cast',casting:'Casting…',waiting:'Waiting for bite…',bite:'Set the Hook!',hooked:'Reel (hold)',landed:'Fish On!',weigh:'Fish On!'};
+function renderBtn(){
+ const b=$('btnAction');
+ let label=BTN_LABEL[FS.phase]||'Cast';
+ if(FS.phase==='idle'){
+ if(FS.cooldown>0) label='Ready '+Math.ceil(FS.cooldown)+'s';
+ else if(rodInst()&&rodInst().dur<=0) label='Rod Broken · Repair';
+ else if(S.stamina<8) label=S.staminaPack>0?'Use Ration':'Out of Stamina';
+ else label='Cast';
+ }
+ b.textContent=label;
+ b.disabled=FS.phase==='casting'||FS.phase==='landed'||FS.phase==='weigh';
+ b.classList.toggle('holdState', FS.phase==='hooked');
+ b.classList.toggle('flash', FS.phase==='bite');
+ const bt=$('btnBait');
+ bt.innerHTML='<span class="bIco">'+baitIcon(S.bait)+'</span><span id="baitName">'+baitNow().name+'</span>';
+}
+// panels
+function openPanel(id){
+ closeAllPanels();
+ $('panel'+id).classList.add('open');
+ document.querySelectorAll('.navItem').forEach(n=>n.classList.toggle('on',n.dataset.view===id));
+ if(id==='Grounds') renderGroundsList();
+ if(id==='Aquarium') renderAquarium();
+ if(id==='Shop') renderShop();
+ if(id==='Rank') fetchRank();
+}
+function closeAllPanels(){
+ document.querySelectorAll('.panel').forEach(p=>p.classList.remove('open'));
+ document.querySelectorAll('.navItem').forEach(n=>n.classList.remove('on'));
+}
+// grounds panel
+function renderGroundsList(){
+ const box=$('groundsList'); box.innerHTML='';
+ for(const g of GROUNDS){
+ const un=groundUnlocked(g.id), list=fishOf(g.id);
+ const have=list.filter(f=>S.aquarium[f.id]).length;
+ const cur=S.ground===g.id;
+ const card=document.createElement('div');
+ card.className='groundCard'+(un?'':' locked');
+ card.innerHTML=`
+  <div class="groundThumb"><canvas width="64" height="64"></canvas></div>
+  <div class="groundInfo">
+  <div class="groundName">${g.name}${cur?' <span class="groundBadge">Current</span>':''}</div>
+  <div class="groundMeta">${g.desc} · Collected ${have}/${list.length}</div>
+  <div class="groundBtns">
+   <button class="btnSm" data-go="${g.id}" ${un?'':'disabled'}>Go Fishing</button>
+   <button class="btnSm alt" data-contest="${g.id}" ${un?'':'disabled'}>Contest</button>
+  </div>
+  </div>`;
+ box.appendChild(card);
+ drawThumb(card.querySelector('canvas'),g.id);
+ }
+ box.querySelectorAll('[data-go]').forEach(b=>b.addEventListener('click',e=>{
+ const g=e.target.dataset.go;
+ if(!groundUnlocked(g)){ toast('Level too low, level up at grounds','red'); return; }
+ S.ground=g; save(); renderTop(); renderGroundsList();
+ closeAllPanels(); toast('Arrived at '+groundOf(g).name,'gold'); SFX.unlock();
+ }));
+ box.querySelectorAll('[data-contest]').forEach(b=>b.addEventListener('click',e=>{
+ startContest(e.target.dataset.contest); closeAllPanels();
+ }));
+}
+// aquarium
+const LOCK_ICON='data:image/svg+xml,'+encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 88 56"><ellipse cx="44" cy="28" rx="25" ry="9.5" fill="none" stroke="#C9C2AE" stroke-width="3"/><path d="M19 28L7 21v14z" fill="#C9C2AE"/><circle cx="60" cy="24" r="2.4" fill="#C9C2AE"/></svg>');
+let aqTab='all';
+const HAB_TABS=[['all','All'],['fresh','Freshwater'],['sea','Saltwater'],['migrate','Migratory'],['spec','Special']];
+function renderAquarium(){
+ const tabs=$('aqTabs'); tabs.innerHTML='';
+ for(const [id,nm] of HAB_TABS){
+ const sub=id==='all'?FISH:(id==='spec'?FISH.filter(f=>f.habitat==='spec'):FISH.filter(f=>f.habitat===id));
+ const cnt=sub.filter(f=>S.aquarium[f.id]).length;
+ const b=document.createElement('button');
+ b.className='tabChip'+(aqTab===id?' on':''); b.textContent=nm+' '+cnt+'/'+sub.length;
+ b.addEventListener('click',()=>{ aqTab=id; renderAquarium(); });
+ tabs.appendChild(b);
+ }
+ const list=aqTab==='all'?FISH:(aqTab==='spec'?FISH.filter(f=>f.habitat==='spec'):FISH.filter(f=>f.habitat===aqTab));
+ $('aqTotal').textContent=collectedCount()+'/'+FISH.length;
+ $('aqIncome').textContent=fmt(offlineRate());
+ $('aqAll').textContent=fmt(S.stats.caught);
+ const grid=$('aqGrid'); grid.innerHTML='';
+ for(const f of list){
+ const aq=S.aquarium[f.id];
+ const card=document.createElement('div');
+ card.className='fishCard'+(aq?'':' locked');
+ const w=aq?aq.bestW:null;
+ card.innerHTML=`
+  <img class="fImg" src="${aq?f.icon:LOCK_ICON}" alt="">
+  <div class="fName"><span class="fDot" style="background:${RAR_COLOR[f.r]}"></span>${f.name}</div>
+  <div class="fW">${aq?(w+' kg'):RAR[f.r]}</div>`;
+ grid.appendChild(card);
+ }
+ $('navAquaDot').classList.toggle('show',false);
+}
+// shop
+let shopTab='rods';
+const CUR_ICO={
+ gold:'<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="12" r="10" fill="#E0A93B"/><circle cx="12" cy="12" r="7" fill="none" stroke="#FFF3D6" stroke-width="2"/><text x="12" y="16.5" text-anchor="middle" font-size="9" font-weight="900" fill="#7A5B0F" font-family="sans-serif">¥</text></svg>',
+ gem:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 4.9 5.4.8-3.9 3.8.9 5.4-4.8-2.5-4.8 2.5.9-5.4L4.2 7.7l5.4-.8z" fill="#5FA8C0" stroke="#E8F4F8" stroke-width="1"/></svg>',
+ spirit:'<svg viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.2 7.3L22 11l-7.8 1.7L12 20l-2.2-7.3L2 11l7.8-1.7z" fill="#E8B84A" stroke="#FFF3D6" stroke-width="1"/></svg>'
+};
+function curHtml(cur,v){ return `<div class="${cur==='gem'?'priceG':cur==='spirit'?'priceS':'shopPrice'}">${CUR_ICO[cur]}${fmt(v)}</div>`; }
+function rodIconHtml(baseId,owned){
+ const c=owned?'#4E8C4A':baseId===5?'#C9A24B':baseId===4?'#AEB8C0':baseId===3?'#2A3238':baseId===2?'#8FA8B8':'#7A5230';
+ const hi=owned?'#9FD09A':baseId===5?'#F2DFAE':baseId===4?'#EAF2F8':baseId===3?'#5A6A74':baseId===2?'#C6DAE6':'#A98B60';
+ const tipC=owned?'#6AB85C':baseId===5?'#E8C96A':baseId===3?'#7F4E9E':'#E8806A';
+ return `<svg viewBox="0 0 48 48" fill="none" stroke-linecap="round"><defs><linearGradient id="rg${baseId}${owned?'o':''}" x1="0" y1="1" x2="1" y2="0"><stop offset="0" stop-color="${c}"/><stop offset=".55" stop-color="${hi}"/><stop offset="1" stop-color="${c}"/></linearGradient></defs><path d="M40 6 L14 30" stroke="url(#rg${baseId}${owned?'o':''})" stroke-width="3"/><path d="M14 30 Q8 34 10 40" stroke="${c}" stroke-width="2.6"/><path d="M34 9a2.5 1.4 0 010-3 2.5 1.4 0 010 3z" fill="#E8C96A"/><path d="M26 16a2.5 1.4 0 010-3 2.5 1.4 0 010 3z" fill="#E8C96A"/><path d="M18 23a2.5 1.4 0 010-3 2.5 1.4 0 010 3z" fill="#E8C96A"/><path d="M39 7.5 35 11.5" stroke="${tipC}" stroke-width="2.6"/></svg>`;
+}
+function potionIcon(id){
+ const col=id==='s'?'#8FBF6A':id==='m'?'#5E9C50':id==='l'?'#4A7FC4':'#E0A93B';
+ const dk=id==='s'?'#5E8A44':id==='m'?'#3F7A38':id==='l'?'#335E94':'#B87F1F';
+ return `<svg viewBox="0 0 48 48" fill="none"><defs><linearGradient id="pg${id}" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="${col}"/><stop offset="1" stop-color="${dk}"/></linearGradient></defs><rect x="18" y="4" width="12" height="5" rx="2" fill="#C9A24B"/><rect x="21" y="1" width="6" height="4" rx="1.5" fill="#8F6B1F"/><path d="M17 12h14l2 28a3 3 0 01-3 3H18a3 3 0 01-3-3z" fill="url(#pg${id})"/><path d="M19 12h10l1.5 18a3 3 0 01-3 3h-7a3 3 0 01-3-3z" fill="#fff" opacity=".22"/><circle cx="26" cy="26" r="2" fill="#fff" opacity=".5"/><circle cx="22" cy="33" r="1.4" fill="#fff" opacity=".4"/><circle cx="30" cy="38" r="1" fill="#fff" opacity=".35"/><path d="M21 24l4 4 4-4 4 4" stroke="#fff" stroke-width="2" fill="none" opacity=".8"/></svg>`;
+}
+function relicIcon(id){
+ const cols={attack_speed:'#E8806A',swift:'#8FBF6A',water_wood:'#5FA8C0',final_dmg:'#E0A93B',attack:'#C94B32',speed:'#8E5FC4'};
+ const c=cols[id]||'#5FA8C0';
+ const lc=cols[id]||'#5FA8C0';
+ return `<svg viewBox="0 0 48 48" fill="none"><defs><radialGradient id="rg${id}" cx=".35" cy=".3" r=".9"><stop offset="0" stop-color="#fff" stop-opacity=".9"/><stop offset=".35" stop-color="${c}"/><stop offset="1" stop-color="${c}"/></radialGradient></defs><path d="M24 4l15 11v18L24 44 9 33V15z" fill="${c}" opacity=".35"/><path d="M24 7l13 9.5v15L24 41 11 31.5v-15z" fill="url(#rg${id})"/><path d="M24 14l9 6.5v9L24 36l-9-6.5v-9z" fill="#fff" opacity=".6"/><path d="M24 19l5 3.7v5L24 32l-5-3.7v-5z" fill="${c}"/><circle cx="20" cy="14" r="1.6" fill="#fff" opacity=".85"/><path d="M15 11l-3 2M33 11l3 2M24 43v2" stroke="#fff" stroke-width="1.6" stroke-linecap="round" opacity=".5"/></svg>`;
+}
+function packIcon(){ return `<svg viewBox="0 0 48 48" fill="none"><defs><linearGradient id="pkg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#E3BE62"/><stop offset="1" stop-color="#C9A24B"/></linearGradient></defs><path d="M14 13h20l6 7v15a5 5 0 01-5 5H13a5 5 0 01-5-5V20z" fill="url(#pkg)"/><path d="M14 13l4-5h12l4 5" fill="#A97F28" stroke="#8F6B1F" stroke-width="1.6"/><circle cx="24" cy="10" r="2.4" fill="#F5E3B2" stroke="#8F6B1F" stroke-width="1.4"/><path d="M16 34l4 4 8-8" stroke="#fff" stroke-width="2.8" fill="none"/><path d="M19 20h10M17 24h12" stroke="#8F6B1F" stroke-width="1.4" opacity=".55"/></svg>`; }
+function specFishIcon(fid,size){
+ const f=fishById[fid];
+ return `<canvas width="${size||52}" height="${size||52}"></canvas>`;
+}
+function drawSpecIn(cv,fid){
+ const f=fishById[fid];
+ const c=cv.getContext('2d');
+ const save=ctx; ctx=c;
+ c.clearRect(0,0,cv.width,cv.height);
+ drawFish(f,cv.width/2,cv.height/2,1.15,0,1.2);
+ ctx=save;
+}
+function renderShop(){
+ const list=$('shopList'); list.innerHTML='';
+ $('curCoins').textContent=fmt(S.coins);
+ $('curGems').textContent=fmt(S.gems);
+ $('curSpirit').textContent=fmt(S.spirit);
+ if(shopTab==='rods') renderShopRods(list);
+ else if(shopTab==='baits') renderShopBaits(list);
+ else if(shopTab==='gems') renderShopGems(list);
+ else renderShopSpirit(list);
+}
+// rods tab
+function renderShopRods(list){
+ const baseOwn={};
+ S.rods.forEach((r,i)=>{ if(!r.prefix) baseOwn[r.base]=i; });
+ RODS.forEach((r)=>{
+ const idx=baseOwn[r.id];
+ const inst=idx!==undefined?S.rods[idx]:null;
+ const eq=S.rod===idx;
+ const prevOwned=r.id===1||baseOwn[r.id-1]!==undefined;
+ const canBuy=!inst&&prevOwned;
+ const card=document.createElement('div'); card.className='shopCard';
+ const broken=inst&&inst.dur<=0;
+ card.innerHTML=`
+  <div class="sImg">${rodIconHtml(r.id,eq)}</div>
+  <div class="shopInfo">
+  <div class="shopName">${r.name}${eq?' <span class="groundBadge">Equipped</span>':''}</div>
+  <div class="shopDesc">${r.desc} · Reel ${r.speed}× · Tension Cap ${r.cap}</div>
+  ${inst?`<div class="durBar"><div class="durFill${broken?' broken':''}" style="width:${Math.max(0,inst.dur/inst.max*100)}%"></div></div>
+  <div class="shopMeta">Durability ${Math.max(0,inst.dur)}/${inst.max}${broken?' · <b style="color:#C94B32">Broken</b>':''}</div>`
+  :(canBuy?curHtml('gold',r.cost):'')}
+  </div>
+  <button class="btnBuy ${eq?'equipped':''}" ${eq?'disabled':''}>${eq?'Equipped':(inst?'Equip':canBuy?'Buy':'Upgrade the previous tier first')}</button>`;
+ card.querySelector('.btnBuy').addEventListener('click',()=>{
+  if(inst){ S.rod=idx; save(); SFX.buy(); renderShop(); renderTop(); toast('Equip '+r.name,'gold'); }
+  else if(canBuy&&S.coins>=r.cost){ addCoins(-r.cost); const ni=S.rods.length; S.rods.push({base:r.id,prefix:'',dur:r.maxDur,max:r.maxDur}); S.rod=ni; save(); SFX.buy(); toast('Acquire '+r.name,'gold'); renderShop(); renderTop(); }
+  else if(canBuy){ toast('Not enough coins','red'); }
+ });
+ list.appendChild(card);
+ if(inst&&inst.dur<inst.max){ // repair entry
+  const fix=document.createElement('button');
+  fix.className='btnBuy'; fix.style.background='#E8806A'; fix.style.boxShadow='0 3px 0 #B4553F'; fix.style.marginTop='-4px';
+  fix.textContent=broken?'Repair (Broken)':'Repair';
+  fix.addEventListener('click',()=>repairModal(idx));
+  list.appendChild(fix);
+ }
+ });
+ // Owned prefix rod
+ S.rods.forEach((inst,i)=>{
+ if(!inst.prefix) return;
+ const base=RODS[inst.base-1], eq=S.rod===i;
+ const broken=inst.dur<=0;
+ const card=document.createElement('div'); card.className='shopCard';
+ card.innerHTML=`
+  <div class="sImg">${rodIconHtml(base.id,eq)}</div>
+  <div class="shopInfo">
+  <div class="shopName">${PREFIX_DEF[inst.prefix].name}·${base.name}<span class="rodBadge">${PREFIX_DEF[inst.prefix].desc}</span></div>
+  <div class="shopDesc">Reel ${base.speed}× · Tension Cap ${RODS[inst.base-1].cap*(1+(inst.prefix==='pow'?PREFIX_DEF.pow.capPct:0))}</div>
+  <div class="durBar"><div class="durFill${broken?' broken':''}" style="width:${Math.max(0,inst.dur/inst.max*100)}%"></div></div>
+  <div class="shopMeta">Durability ${Math.max(0,inst.dur)}/${inst.max}${broken?' · <b style="color:#C94B32">Broken</b>':''}</div>
+  </div>
+  <button class="btnBuy ${eq?'equipped':''}" ${eq?'disabled':''}>${eq?'Equipped':'Equip'}</button>`;
+ card.querySelector('.btnBuy').addEventListener('click',()=>{ if(!eq){ S.rod=i; save(); SFX.buy(); renderShop(); renderTop(); toast('Equip '+PREFIX_DEF[inst.prefix].name+'·'+base.name,'gold'); } });
+ list.appendChild(card);
+ if(inst.dur<inst.max){
+  const fix=document.createElement('button');
+  fix.className='btnBuy'; fix.style.background='#E8806A'; fix.style.boxShadow='0 3px 0 #B4553F'; fix.style.marginTop='-4px';
+  fix.textContent=broken?'Repair (Broken)':'Repair';
+  fix.addEventListener('click',()=>repairModal(i));
+  list.appendChild(fix);
+ }
+ });
+}
+// baits tab
+function renderShopBaits(list){
+ for(const b of BAITS){
+ const owned=S.baits.indexOf(b.id)>=0, cur=S.bait===b.id;
+ const card=document.createElement('div'); card.className='shopCard';
+ card.innerHTML=`
+  <div class="sImg">${baitIcon(b.id)}</div>
+  <div class="shopInfo">
+  <div class="shopName">${b.name}${cur?' <span class="groundBadge">In Use</span>':''}</div>
+  <div class="shopDesc">${b.desc} · per rod ${b.fee} Coins</div>
+  ${owned?'':curHtml('gold',b.unlock)}
+  </div>
+  <button class="btnBuy ${owned?'equipped':''}" ${owned?'':''}>${owned?'Select':canUnlockBait(b)?'Unlock':'Level up first'}</button>`;
+ card.querySelector('.btnBuy').addEventListener('click',()=>{
+  if(!owned){
+  if(!canUnlockBait(b)){ toast('Level too low, keep fishing to level up','red'); return; }
+  if(S.coins>=b.unlock){ addCoins(-b.unlock); S.baits.push(b.id); save(); SFX.buy(); toast('Unlock'+b.name+'','gold'); }
+  else { toast('Not enough coins','red'); return; }
+  }
+  if(FS.phase!=='idle'){ toast('Reel in before changing bait'); return; }
+  S.bait=b.id; save(); renderShop(); renderTop(); toast('Equip '+b.name,'gold');
+ });
+ list.appendChild(card);
+ }
+}
+function canUnlockBait(b){
+ return S.level>=Math.max(1, Math.ceil(Math.sqrt(b.unlock/100)*2));
+}
+// gems tab
+function renderShopGems(list){
+ const grp=(t)=>{ const d=document.createElement('div'); d.className='shopGroup'; d.textContent=t; list.appendChild(d); };
+ const ad=document.createElement('div'); ad.className='adBanner';
+ ad.innerHTML=`<div><div class="adBannerT">Watch Ad for Gems</div><div class="adBannerD">Daily 3x · ${S.adsGemsLeft||0} left today · +3 gems each</div></div><button onclick="openAd('gems')">Watch Ad</button>`;
+ list.appendChild(ad);
+ grp('Stamina Potion');
+ for(const p of POTIONS){
+ const card=document.createElement('div'); card.className='shopCard qGold';
+ card.innerHTML=`
+  <div class="sImg">${potionIcon(p.id)}</div>
+  <div class="shopInfo">
+  <div class="shopName">${p.name}</div>
+  <div class="shopDesc">Restore now ${p.heal} stamina</div>
+  ${curHtml('gem',p.cost)}
+  </div>
+  <button class="btnBuy" onclick="buyPotion('${p.id}')">Buy</button>`;
+ list.appendChild(card);
+ }
+ grp('Prefix Rods (permanent stats)');
+ for(const pr of PREFIX_RODS){
+ const base=RODS[pr.base-1], pd=PREFIX_DEF[pr.prefix];
+ const owned=S.rods.some(r=>r.base===pr.base&&r.prefix===pr.prefix);
+ const card=document.createElement('div'); card.className='shopCard qGold';
+ card.innerHTML=`
+  <div class="sImg">${rodIconHtml(base.id,owned)}</div>
+  <div class="shopInfo">
+  <div class="shopName">${pd.name}·${base.name}<span class="rodBadge">${pd.desc}</span></div>
+  <div class="shopDesc">Reel Speed ${base.speed}× · Level Req Lv.${pr.lv}</div>
+  ${owned?'<div class="relicOwn">Owned</div>':curHtml('gem',pr.cost)}
+  </div>
+  <button class="btnBuy ${owned?'equipped':''}" ${owned?'disabled':''} onclick="buyPrefixRod(${pr.base},'${pr.prefix}')">${owned?'Owned':'Buy'}</button>`;
+ list.appendChild(card);
+ }
+ grp('Daily Special · RELIC STONES');
+ for(const id in RELIC_DEF){
+ const d=RELIC_DEF[id], cur=S.relics[id]||0;
+ if(d.costGems===undefined) continue; // spirit-priced relics live in the Spirit Shop tab
+ const card=document.createElement('div'); card.className='shopCard qGold';
+ card.innerHTML=`
+  <div class="sImg">${relicIcon(id)}</div>
+  <div class="shopInfo">
+  <div class="shopName">${d.name}</div>
+  <div class="shopDesc">${d.desc} · Permanent</div>
+  ${cur>=d.max?'<div class="relicOwn">Max Level</div>':curHtml('gem',d.costGems)}
+  </div>
+  <button class="btnBuy ${cur>=d.max?'equipped':''}" ${cur>=d.max?'disabled':''} onclick="buyRelic('${id}')">${cur>0?(cur+'/'+d.max):'Buy'}</button>`;
+ list.appendChild(card);
+ }
+ grp('Daily Special · Spirit');
+ for(const sp of SPEC_FISH){
+ if(!sp.gems) continue;
+ const f=fishById[sp.id], owned=!!S.aquarium[sp.id];
+ const card=document.createElement('div'); card.className='shopCard qGold';
+ card.innerHTML=`
+  <div class="sImg">${specFishIcon(sp.id)}</div>
+  <div class="shopInfo">
+  <div class="shopName">${f.name}</div>
+  <div class="shopDesc">${f.quip} · ${RAR[f.r]}</div>
+  ${owned?'<div class="relicOwn">Collected</div>':curHtml('gem',sp.gems)}
+  </div>
+  <button class="btnBuy ${owned?'equipped':''}" ${owned?'disabled':''} onclick="buySpecFish('${sp.id}','gems')">${owned?'Collected':'Buy'}</button>`;
+ list.appendChild(card);
+ const cv=card.querySelector('canvas'); if(cv) drawSpecIn(cv,sp.id);
+ }
+}
+// spirit shop tab
+let spiritRecs=null;
+function renderShopSpirit(list){
+ const grp=(t)=>{ const d=document.createElement('div'); d.className='shopGroup'; d.textContent=t; list.appendChild(d); };
+ const ad=document.createElement('div'); ad.className='adBanner blue';
+ ad.innerHTML=`<div><div class="adBannerT">Watch Ad for Spirit</div><div class="adBannerD">Daily 2x · ${S.adsSpiritLeft||0} left today · +2 Spirit each</div></div><button onclick="openAd('spirit')">Watch Ad</button>`;
+ list.appendChild(ad);
+ grp('Ration(stamina food)');
+ const packs=[[5,30],[20,100]];
+ for(const [n,cost] of packs){
+ const card=document.createElement('div'); card.className='shopCard qBlue';
+ card.innerHTML=`
+  <div class="sImg">${packIcon()}</div>
+  <div class="shopInfo">
+  <div class="shopName">Ration ×${n}</div>
+  <div class="shopDesc">${n} stamina refills, usable when low</div>
+  ${curHtml('spirit',cost)}
+  </div>
+  <button class="btnBuy" onclick="buyPack(${n},${cost})">Buy</button>`;
+ list.appendChild(card);
+ }
+ grp('Daily Pick');
+ const recs=getSpiritRecs();
+ for(const it of recs){
+ if(it.type==='relic'){
+  const d=RELIC_DEF[it.id], cur=S.relics[it.id]||0;
+  const card=document.createElement('div'); card.className='shopCard qBlue';
+  card.innerHTML=`
+  <div class="sImg">${relicIcon(it.id)}</div>
+  <div class="shopInfo">
+   <div class="shopName">${d.name}</div>
+   <div class="shopDesc">${d.desc} · Permanent</div>
+   ${cur>=d.max?'<div class="relicOwn">Max Level</div>':curHtml('spirit',d.costSpirit)}
+  </div>
+  <button class="btnBuy ${cur>=d.max?'equipped':''}" ${cur>=d.max?'disabled':''} onclick="buyRelic('${it.id}')">${cur>0?(cur+'/'+d.max):'Buy'}</button>`;
+  list.appendChild(card);
+ } else {
+  const sp=it.sp, f=fishById[sp.id], owned=!!S.aquarium[sp.id];
+  const card=document.createElement('div'); card.className='shopCard qBlue';
+  card.innerHTML=`
+  <div class="sImg">${specFishIcon(sp.id)}</div>
+  <div class="shopInfo">
+   <div class="shopName">${f.name}</div>
+   <div class="shopDesc">${f.quip} · ${RAR[f.r]}</div>
+   ${owned?'<div class="relicOwn">Collected</div>':curHtml('spirit',sp.spirit)}
+  </div>
+  <button class="btnBuy ${owned?'equipped':''}" ${owned?'disabled':''} onclick="buySpecFish('${sp.id}','spirit')">${owned?'Collected':'Buy'}</button>`;
+  list.appendChild(card);
+  const cv=card.querySelector('canvas'); if(cv) drawSpecIn(cv,sp.id);
+ }
+ }
+}
+function getSpiritRecs(){
+ if(spiritRecs) return spiritRecs;
+ const pool=[];
+ for(const id in RELIC_DEF){ if(RELIC_DEF[id].costSpirit) pool.push({type:'relic',id}); }
+ for(const sp of SPEC_FISH){ if(sp.spirit) pool.push({type:'fish',sp}); }
+ // Fisher-Yates
+ for(let i=pool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
+ spiritRecs=pool.slice(0,6);
+ return spiritRecs;
+}
+function refreshSpiritRecs(){ spiritRecs=null; renderShop(); }
+// buy
+function buyPotion(id){
+ const p=POTIONS.find(x=>x.id===id);
+ if(S.gems<p.cost){ toast('Not enough Gems','red'); return; }
+ if(S.stamina>100-p.heal){
+ showModal(`<h3>${p.name}</h3><p>Stamina now ${Math.round(S.stamina)}/100, restores only ${p.heal} pts</p>
+  <div class="offlineNum">${p.cost} Gems</div>
+  <button class="btnBig" onclick="doBuyPotion('${p.id}')">Confirm Purchase</button>
+  <button class="btnSm" onclick="closeModal()">Cancel</button>`);
+ return;
+ }
+ doBuyPotion(p.id);
+}
+function doBuyPotion(id){
+ const p=POTIONS.find(x=>x.id===id);
+ addGems(-p.cost); addStamina(p.heal);
+ closeModal(); save(); SFX.buy(); renderShop(); toast('Stamina +'+p.heal,'gold');
+}
+function buyRelic(id){
+ const d=RELIC_DEF[id], cur=S.relics[id]||0;
+ if(cur>=d.max){ toast(d.name+' Max Level','red'); return; }
+ const useSpirit=d.costSpirit!==undefined;
+ const cost=useSpirit?d.costSpirit:d.costGems;
+ if(useSpirit?S.spirit<cost:S.gems<cost){ toast(useSpirit?'Not enough Spirit':'Not enough Gems','red'); return; }
+ if(useSpirit) addSpirit(-cost); else addGems(-cost);
+ S.relics[id]=cur+1;
+ save(); SFX.buy(); renderShop(); toast('Socket '+d.name+' ('+(cur+1)+'/'+d.max+')','gold');
+}
+function buyPrefixRod(base,prefix){
+ const pr=PREFIX_RODS.find(x=>x.base===base&&x.prefix===prefix);
+ if(S.level<pr.lv){ toast('Requires Lv.'+pr.lv,'red'); return; }
+ if(S.gems<pr.cost){ toast('Not enough Gems','red'); return; }
+ if(S.rods.some(r=>r.base===base&&r.prefix===prefix)){ toast('Rod already owned','red'); return; }
+ addGems(-pr.cost);
+ const max=Math.round(RODS[base-1].maxDur*(1+(PREFIX_DEF[prefix].durPct||0)));
+ S.rods.push({base,prefix,dur:max,max});
+ save(); SFX.buy(); renderShop(); toast('Acquired '+PREFIX_DEF[prefix].name+' '+RODS[base-1].name,'gold');
+}
+function buyPack(n,cost){
+ if(S.spirit<cost){ toast('Not enough Spirit','red'); return; }
+ addSpirit(-cost); S.staminaPack+=n; addStamina(100);
+ save(); SFX.buy(); renderShop(); toast('Ration ×'+n+' Ration used, stamina restored','gold');
+}
+function buySpecFish(id,cur){
+ const f=fishById[id], sp=SPEC_FISH.find(x=>x.id===id);
+ if(S.aquarium[id]){ toast('Collected: '+f.name,'red'); return; }
+ const cost=cur==='spirit'?sp.spirit:sp.gems;
+ if(cur==='spirit'?S.spirit<cost:S.gems<cost){ toast(cur==='spirit'?'Not enough Spirit':'Not enough Gems','red'); return; }
+ if(cur==='spirit') addSpirit(-cost); else addGems(-cost);
+ S.aquarium[id]={count:0,bestW:0}; S.boughtFish.push(id); S.stats.species++;
+ save(); SFX.unlock(); renderShop(); renderAquarium(); toast('Added "'+f.name+'" to Aquarium','gold');
+}
+// repair
+function repairModal(idx){
+ const inst=S.rods[idx], base=RODS[inst.base-1];
+ const goldCost=10*base.id;
+ showModal(`<h3>Repair${(inst.prefix?PREFIX_DEF[inst.prefix].name+'·':'')+base.name}</h3>
+ <p style="font-variant-numeric:tabular-nums">Durability ${Math.max(0,inst.dur)}/${inst.max}</p>
+ <div class="repairRow">
+  <button class="btnBig" onclick="repairGold(${idx})">Coins Repair ${goldCost} Coins<br><span style="font-size:11px;opacity:.75">Restore to full, cap -20%</span></button>
+  <button class="btnBig alt" onclick="repairAd(${idx})">Ad Repair (Free)<br><span style="font-size:11px;opacity:.75">Left today ${S.adsLeft}/3</span></button>
+  <button class="btnSm" onclick="closeModal()">Cancel</button>
+ </div>`);
+}
+function repairGold(idx){
+ const inst=S.rods[idx], base=RODS[inst.base-1];
+ const cost=10*base.id;
+ if(S.coins<cost){ toast('Not enough coins','red'); return; }
+ addCoins(-cost);
+ inst.dur=inst.max;
+ inst.max=Math.max(Math.round(ROD_BASE_DUR[base.id]*0.4), Math.round(inst.max*0.8));
+ closeModal(); save(); SFX.buy(); renderShop(); toast('Repaired (cap -20%)','gold');
+}
+// adsgram interstitial: reward only after full watch
+const AD_BLOCK_ID=''; // adsgram interstitial blockId (int-xxx), fill from dashboard
+let _adBusy=false;
+function playAd(onDone){
+ if(_adBusy){ toast('Ad playing, please wait','red'); return; }
+ if(!window.Adsgram){ toast('Ad service not ready. Open the game in Telegram','red'); return; }
+ if(!AD_BLOCK_ID){ toast('Ad block not configured (blockId is empty)','red'); return; }
+ _adBusy=true;
+ const ctrl=window.Adsgram.init({blockId:AD_BLOCK_ID,debug:false});
+ ctrl.show().then(()=>{
+ _adBusy=false;
+ onDone();
+ }).catch(()=>{
+ _adBusy=false;
+ toast('Ads unavailable, try again later','red');
+ });
+}
+function adReward(type){
+ if(!S.playerId) S.playerId='p'+Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);
+ fetch('/api/adreward',{method:'POST',headers:{'Content-Type':'application/json'},
+ body:JSON.stringify({playerId:S.playerId,type})}).then(r=>r.json()).then(d=>{
+ if(!d.ok){ toast(d.msg||'Claim failed','red'); return; }
+ S.gems=d.gems; S.spirit=d.spirit; S.adsGemsLeft=d.adsGemsLeft; S.adsSpiritLeft=d.adsSpiritLeft;
+ save(); renderTop(); renderShop();
+ toast(type==='gems'?'from ad: +3 Gems':'from ad: +2 Spirit','gold');
+ }).catch(()=>toast('Network error, try again','red'));
+}
+function openAd(type){
+ const n=type==='gems'?(S.adsGemsLeft||0):(S.adsSpiritLeft||0);
+ if(n<=0){ toast(type==='gems'?'Daily gem ads used up, come back tomorrow':'Daily spirit ads used up, come back tomorrow','red'); return; }
+ playAd(()=>adReward(type));
+}
+function repairAd(idx){
+ const inst=S.rods[idx];
+ if(S.adsLeft<=0){ toast('Daily free repairs used up','red'); return; }
+ playAd(()=>{
+ S.adsLeft--; inst.dur=inst.max;
+ closeModal(); save(); SFX.buy(); renderShop(); toast('Repaired free, durability restored','gold');
+ });
+}
+// weigh
+function showWeigh(r){
+ const ov=$('overlayWeigh'); ov.classList.add('show');
+ const body=ov.querySelector('.cardBody');
+ if(body){ body.dataset.rar=r.f.r; }
+ const c=$('weighCanvas'), c2=c.getContext('2d');
+ c2.clearRect(0,0,260,180);
+ const save=ctx; ctx=c2;
+ drawFish(r.f,130,86,1.35,0,1.8);
+ ctx=save;
+ c2.globalAlpha=0.15; c2.fillStyle='#26333B';
+ c2.beginPath(); c2.ellipse(130,150,72,8,0,0,7); c2.fill();
+ c2.globalAlpha=1;
+ $('weighTag').textContent=RAR[r.f.r];
+ $('weighTag').style.background=RAR_COLOR[r.f.r];
+ $('weighName').textContent=r.f.name;
+ $('weighWeight').textContent=r.w;
+ $('weighCoins').textContent='+'+fmt(r.coins);
+ $('weighXp').textContent='+'+r.xp;
+ $('weighFirst').style.display=r.isFirst?'inline-flex':'none';
+ $('sellCoins').textContent='+'+fmt(r.coins);
+ const rel=$('btnRelease');
+ if(r.spiritVal>0){ rel.style.display='block'; $('releaseSpirit').textContent='+'+r.spiritVal; }
+ else { rel.style.display='none'; }
+ SFX.weigh();
+}
+// modal
+function showModal(html){ $('modalBody').innerHTML=html; $('overlayModal').classList.add('show'); }
+function closeModal(){ $('overlayModal').classList.remove('show'); }
+function hideOverlay(id){ $(id).classList.remove('show'); }
+// bait select
+function showBaitPicker(){
+ let html='<h3>Choose Bait</h3>';
+ for(const b of BAITS){
+ const owned=S.baits.indexOf(b.id)>=0, cur=S.bait===b.id;
+ html+=`<button class="baitRow" data-b="${b.id}" style="display:flex;align-items:center;gap:10px;width:100%;padding:10px 8px;border-bottom:1px solid var(--wood-line);${cur?'background:var(--paper-deep);border-radius:10px':''}">
+  <span style="width:30px;height:30px;flex:none">${baitIcon(b.id)}</span>
+  <span style="flex:1;text-align:left"><b>${b.name}</b><span style="display:block;font-size:11px;color:var(--ink-soft)">${b.desc} · ${b.fee} gold/rod</span></span>
+  <span style="font-size:12px;color:${owned?(cur?'var(--cinnabar)':'var(--ink-soft)'):'#C94B32'}">${owned?(cur?'In Use':'Select'):'Locked'}</span>
+ </button>`;
+ }
+ showModal(html+'<button class="btnBig" onclick="closeModal()">Confirm</button>');
+ document.querySelectorAll('.baitRow').forEach(el=>el.addEventListener('click',()=>{
+ const id=el.dataset.b, b=BAITS.find(x=>x.id===id);
+ if(S.baits.indexOf(id)<0){ toast('Not unlocked yet: '+b.name+', visit the shop','red'); return; }
+ if(FS.phase!=='idle'){ toast('Reel in before changing bait'); return; }
+ S.bait=id; save(); closeModal(); renderTop(); toast('Equip '+b.name,'gold');
+ }));
+}
+// sound btn
+function renderSoundBtn(){
+ const b=$('btnSound');
+ b.innerHTML=S.sound
+ ?'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9v6h4l6 5V4L8 9H4z" fill="currentColor" stroke="none"/><path d="M16 9c2 1.5 2 4.5 0 6M18.5 6.5c3 2.5 3 8.5 0 11"/></svg>'
+ :'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 9v6h4l6 5V4L8 9H4z" fill="currentColor" stroke="none"/><path d="M16 9l5 6M21 9l-5 6"/></svg>';
+ b.setAttribute('aria-checked',S.sound?'true':'false');
+}
+
+// main loop & init
+function drawBiteFish(g,t){
+ if(!FS.fish) return;
+ const size=13+Math.min(24,FS.fish.max);
+ const y=cv.waterY+56+Math.sin(t*3)*5;
+ drawFish(FS.fish,cv.w*0.5,y,size,t*1.5,Math.sin(t*5)*0.07,0.5);
+}
+function drawJump(g,t){
+ if(!VIS.fish) return;
+ const j=Math.min(1,Math.max(0,VIS.jumpT/0.95));
+ const y=cv.waterY-12-Math.sin(Math.PI*j)*60;
+ const x=cv.w*0.5+Math.sin(VIS.jumpT*7)*10;
+ const size=15+Math.min(26,VIS.fish.max*1.1);
+ const ang=-Math.PI*0.3+Math.sin(VIS.jumpT*12)*0.1+(j>0.55?-(j-0.55)*2.4:0);
+ drawFish(VIS.fish,x,y,size,ang,VIS.jumpT*16);
+ ctx.save(); ctx.globalAlpha=0.45;
+ ctx.fillStyle='#EAF6F8';
+ for(let i=0;i<5;i++){
+ const a=Math.PI/2+(i-2)*0.4;
+ ctx.beginPath(); ctx.arc(cv.w*0.5+Math.cos(a)*12*j*3, cv.waterY+4+Math.sin(a)*10*j*3, 3.4*(1-j*0.4),0,7); ctx.fill();
+ }
+ ctx.restore();
+}
+let lastT=0, lastFrameTs=performance.now();
+function loop(ts){
+ // schedule next frame first: a bad frame never freezes the game
+ requestAnimationFrame(loop);
+ lastFrameTs=performance.now();
+ try{
+ const dt=Math.min(0.05,(ts-lastT)/1000||0.016); lastT=ts;
+ cv.t+=dt; VIS.t+=dt;
+ if(!anyOverlay()){
+  tickFishing(dt);
+  tickContest(dt);
+ }
+ if(!reduceMotion&&Math.random()<dt*0.6) spawnParticle(S.ground);
+ updateParts(dt,S.ground);
+ ctx.setTransform(cv.dpr,0,0,cv.dpr,0,0);
+ ctx.clearRect(0,0,cv.w,cv.h);
+ drawScene(S.ground,cv.t);
+ drawRod(S.ground,cv.t);
+ drawFloat(S.ground,cv.t);
+ if(FS.phase==='hooked') drawHookFish(S.ground,cv.t);
+ else if(FS.phase==='bite') drawBiteFish(S.ground,cv.t);
+ else if(FS.phase==='landed') drawJump(S.ground,cv.t);
+ }catch(e){
+ try{ window.__DBG_ERR.push({t:Date.now(),m:'frame:'+((e&&e.message)||e),f:'',l:0}); }catch(_){}
+ }
+}
+
+// global onclick handlers
+function actBtn(){
+ acInit();
+ tapAction();
+}
+function pickBait(){ acInit(); showBaitPicker(); }
+function toggleSound(){
+ S.sound=!S.sound; save(); renderSoundBtn();
+ if(S.sound){ acInit(); SFX.coin(); } else toast('Muted');
+}
+function navTo(id){
+ acInit();
+ const cap=id.charAt(0).toUpperCase()+id.slice(1);
+ if($('panel'+cap).classList.contains('open')) closeAllPanels();
+ else openPanel(cap);
+}
+function setShopTab(tab){
+ const tabs=document.querySelectorAll('.shopTab');
+ tabs.forEach(x=>x.classList.remove('on'));
+ const idx={rods:0,baits:1,gems:2,spirit:3}[tab]||0;
+ if(tabs[idx]) tabs[idx].classList.add('on');
+ shopTab=tab; renderShop();
+}
+function startGame(){
+ acInit();
+ $('splash').classList.add('hide');
+ const gain=offlineGain();
+ if(gain>0){
+ showModal(`<h3>Offline Earnings</h3><p>Your aquarium fish worked for you</p>
+  <div class="offlineNum">+${fmt(gain)} Coins</div>
+  <p class="offlineSub">Offline time counted, up to 8 hours</p>
+  <button class="btnBig" id="btnClaim">Claim</button>`);
+ $('btnClaim').addEventListener('click',()=>{ addCoins(gain); closeModal(); save(); SFX.coin(); });
+ } else { save(); }
+ setTimeout(()=>{ $('splash').style.display='none'; if(!S.tutorialDone) showTutorial(); },560);
+}
+function bindEvents(){
+ const btnA=$('btnAction');
+ btnA.addEventListener('pointerdown',e=>{
+ acInit();
+ if(FS.phase==='hooked') FS.reeling=true;
+ });
+ ['pointerup','pointercancel','pointerleave','lostpointercapture'].forEach(ev=>{
+ btnA.addEventListener(ev,()=>{ FS.reeling=false; });
+ });
+ btnA.addEventListener('contextmenu',e=>e.preventDefault());
+ window.addEventListener('keydown',e=>{
+ if(e.code==='Space'||e.code==='Enter'){ if(e.repeat) return; e.preventDefault(); acInit(); tapAction(); if(FS.phase==='hooked') FS.reeling=true; }
+ });
+ window.addEventListener('keyup',e=>{ if(e.code==='Space'||e.code==='Enter') FS.reeling=false; });
+ document.addEventListener('visibilitychange',()=>{ if(document.hidden) save(); });
+ window.addEventListener('beforeunload',save);
+ setInterval(()=>{ if(Date.now()-S.adsT>86400000){ S.adsLeft=3; S.adsGemsLeft=3; S.adsSpiritLeft=2; S.adsT=Date.now(); } save(); },30000);
+ // main-loop watchdog: log if no new frame for 1.2s (diagnose real-device freezes)
+ setInterval(()=>{
+ try{ if(performance.now()-lastFrameTs>1200) window.__DBG_ERR.push({t:Date.now(),m:'watchdog:no-frame>1.2s',f:'',l:0}); }catch(_){}
+ },1500);
+}
+
+function init(){
+ try{
+ fitCanvas();
+ load();
+ loadServer();
+ genFishIcons();
+ genSplashFish();
+ renderSoundBtn();
+ renderTop(); renderHud(); renderBtn();
+ renderGroundsList(); renderAquarium(); renderShop();
+ bindEvents();
+ }catch(e){ console.error(e); }
+ requestAnimationFrame(loop);
+}
+
+// leaderboard server block starts here
+// leaderboard (server-backed)
+let rankCat='score', rankNextSettle=0;
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
+function loadTgWidget(){
+ const bot=$('tgBot').value.trim();
+ if(!bot){ toast('Please enter your Telegram Bot Username','red'); return; }
+ const box=$('tgWidgetBox'); box.innerHTML='';
+ const s=document.createElement('script');
+ s.async=true; s.src='https://telegram.org/js/telegram-widget.js?22';
+ s.setAttribute('data-telegram-login',bot);
+ s.setAttribute('data-size','large');
+ s.setAttribute('data-onauth','onTgAuth(user)');
+ s.setAttribute('data-request-access','write');
+ s.onerror=()=>{ box.innerHTML='<div class="tgTip" style="color:#C94B32">Unavailable Telegram Login (network restricted). Use the manual entry below.</div>'; };
+ box.appendChild(s);
+}
+function onTgAuth(u){
+ S.tg={name:((u.first_name||'')+(u.last_name?(' '+u.last_name):'')).trim()||'ANGLERS', account:u.username?('@'+u.username):'', avatar:u.photo_url||''};
+ save(true); renderTgUI(); renderShop();
+ toast('Bound Telegram: '+(S.tg.name||S.tg.account||''),'gold');
+}
+function saveTgManual(){
+ S.tg={name:$('tgName').value.trim()||'ANGLERS', account:$('tgAcc').value.trim(), avatar:$('tgAv').value.trim()};
+ save(true); renderTgUI(); renderShop();
+ toast('Saved Telegram info','gold');
+}
+function unbindTg(){
+ S.tg={name:'',account:'',avatar:''};
+ save(true); renderTgUI(); renderShop();
+ toast('Unbound');
+}
+function renderTgUI(){
+ const st=$('tgState');
+ if(S.tg&&(S.tg.name||S.tg.account)){
+ st.innerHTML='<div style="color:var(--bamboo);font-weight:700">Bound: '+esc(S.tg.name)+' '+esc(S.tg.account)+'</div>';
+ $('tgName').value=S.tg.name||''; $('tgAcc').value=S.tg.account||''; $('tgAv').value=S.tg.avatar||'';
+ } else { st.innerHTML='<div>Not Bound · Leaderboard will show a default nickname</div>'; }
+}
+function fetchRank(){
+ if(!S.playerId) S.playerId='p'+Math.random().toString(36).slice(2,10)+Date.now().toString(36).slice(-4);
+ try{
+ fetch('/api/rank?player='+encodeURIComponent(S.playerId)+'&cat='+rankCat).then(r=>r.json()).then(d=>{
+  if(!d||!d.top) return;
+  rankNextSettle=d.nextSettle||0;
+  $('rkBestSeg').textContent=d.bestSeg||'--';
+  $('rkBestName').textContent=d.bestName||'';
+  if(d.me){
+  $('rkMeRank').textContent=d.me.rank?('#'+d.me.rank):'Not ranked yet';
+  $('rkMeSeg').textContent=d.me.segLabel||'';
+  $('rkMeScore').textContent=d.me.score||0;
+  }
+  const box=$('rankList'); box.innerHTML='';
+  let rows=(d.top||[]).slice(0,20);
+  // keep My row always visible
+  if(d.me&&!rows.some(r=>r.me)){
+  const mrow={name:(d.me.name||'ANGLERS')+' (me)',score:d.me.score,segLabel:d.me.segLabel||'--',me:true,rank:d.me.rank||'--',avatar:d.me.avatar||'',account:d.me.account||''};
+  rows.push(mrow);
+  }
+  rows.forEach((row,i)=>{
+  const div=document.createElement('div');
+  div.className='rankRow'+(row.me?' rankMe':'');
+  const nm=esc(row.name||'ANGLERS');
+  const initial=nm.charAt(0)||'A';
+  const avUrl=row.avatar?row.avatar.replace(/[\\"'<>]/g,''):'';
+  const av=avUrl?`<div class="rankAvatar" style="background-image:url('${avUrl}')"></div>`:`<div class="rankAvatar">${initial}</div>`;
+  const acc=row.account?`<div class="rankAcc">${esc(row.account)}</div>`:'';
+  div.innerHTML=`<div class="rankIdx ${i<3?'t'+(i+1):''}">${row.me?row.rank:(i+1)}</div>
+   <div class="rankUser">${av}<div class="rankInfo"><div class="rankName${row.me?' me':''}">${nm}</div>${acc}</div></div>
+   <div class="rankSeg">${row.segLabel||''}</div>
+   <div class="rankScore">${rankCat==='aq'?(row.score+' species'):(row.score+' pts')}</div>`;
+  box.appendChild(div);
+  });
+  const claimBtn=$('btnClaimReward');
+  if(d.me&&d.me.reward&&d.me.reward.gems>0){
+  claimBtn.style.display='inline-block';
+  claimBtn.textContent='Claim Daily Reward +'+d.me.reward.gems+' gems';
+  } else { claimBtn.style.display='none'; }
+ }).catch(()=>{});
+ }catch(e){}
+}
+function tickRankCountdown(){
+ const el=$('rkCountdown'); if(!el) return;
+ if(!rankNextSettle){ el.textContent='Daily reward settles in --:--:-- '; return; }
+ const s=Math.max(0,Math.floor((rankNextSettle-Date.now())/1000));
+ const h=Math.floor(s/3600), m=Math.floor(s%3600/60), ss=s%60;
+ el.textContent='Daily reward settles in '+String(h).padStart(2,'0')+':'+String(m).padStart(2,'0')+':'+String(ss).padStart(2,'0')+' ';
+}
+function claimRankReward(){
+ if(!S.playerId) return;
+ try{
+ fetch('/api/rank?player='+encodeURIComponent(S.playerId)+'&cat='+rankCat).then(r=>r.json()).then(d=>{
+  if(!d||!d.me||!d.me.reward||d.me.reward.gems<=0) return;
+  addGems(d.me.reward.gems);
+  addCoins(d.me.reward.coins||0);
+  S.rankReward=0;
+  save();
+  toast('Claim Daily Reward: +'+(d.me.reward.gems)+' Gems','gold');
+  fetchRank();
+ }).catch(()=>{});
+ }catch(e){}
+}
+// init rank tab + countdown + player id
+try{
+ document.querySelectorAll('#rankTabs .tabChip').forEach(b=>b.addEventListener('click',()=>{
+ document.querySelectorAll('#rankTabs .tabChip').forEach(x=>x.classList.remove('on'));
+ b.classList.add('on'); rankCat=b.dataset.rk; fetchRank();
+ }));
+ setInterval(tickRankCountdown,1000);
+}catch(e){}
+
+// debug api
+try{ window.__G={S,FS,V:VIS,api:{
+ cast:()=>startCast(),
+ forceBite:()=>{ if(FS.phase==='waiting') FS.biteDelay=0; },
+ hook:()=>{ if(FS.phase==='bite') hookFish(); },
+ reel:(v)=>setReeling(v),
+ coins:(n)=>addCoins(n),
+ gems:(n)=>addGems(n),
+ spirit:(n)=>addSpirit(n),
+ stamina:(n)=>{ S.stamina=Math.min(100,Math.max(0,S.stamina+n)); renderHud(); renderBtn(); },
+ pack:(n)=>{ S.staminaPack=(S.staminaPack||0)+n; },
+ relic:(id,n)=>{ S.relics[id]=(S.relics[id]||0)+(n||1); renderShop(); },
+ dur:(n)=>{ const i=rodInst(); if(i){ i.dur=Math.max(0,i.dur+n); renderShop(); } },
+ setGround:(g)=>{ S.ground=g; renderTop(); },
+ setLevel:(lv)=>{ S.level=lv; renderTop(); renderGroundsList(); },
+ state:()=>({phase:FS.phase,coins:S.coins,gems:S.gems,spirit:S.spirit,stamina:Math.round(S.stamina),aq:Object.keys(S.aquarium).length,species:S.stats.species,score:S.score,rodDur:S.rods[S.rod]?S.rods[S.rod].dur:0})
+}}; }catch(e){}
+
+init();
+
+</script>
+</body>
+</html>
